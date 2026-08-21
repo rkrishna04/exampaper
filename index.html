@@ -4,15 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exam Paper Generator</title>
+    
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2pdf for PDF generation -->
+    
+    <!-- PDF, Image Export, and Drag-and-Drop Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- html2canvas for Image generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <style>
-        body { background-color: #f3f4f6; }
+        /* Light/Dark Mode Transitions */
+        body { background-color: #f3f4f6; transition: background-color 0.3s ease; }
+        body.dark-mode { background-color: #1f2937; }
+        body.dark-mode .export-bar { background-color: #374151; color: white; border-color: #4b5563; }
+        body.dark-mode .export-bar label, body.dark-mode .export-bar span { color: #e5e7eb; }
+        body.dark-mode .export-bar select { background-color: #4b5563; color: white; border-color: #6b7280; }
         
         /* A4 Paper Styling */
         .a4-paper {
@@ -38,15 +45,27 @@
             outline: 1px solid #3b82f6;
         }
 
-        /* Prevent page breaks inside question blocks */
-        .avoid-break {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
+        /* Formatting Toolbar Buttons */
+        .format-btn {
+            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+            border: 1px solid #d1d5db; border-radius: 4px; background: white; color: black; font-weight: bold; cursor: pointer;
         }
+        .format-btn:hover { background: #f3f4f6; }
+        body.dark-mode .format-btn { background: #4b5563; color: white; border-color: #6b7280; }
+        body.dark-mode .format-btn:hover { background: #6b7280; }
 
-        /* Hover menu for inserting/deleting specific elements */
+        /* Resizable Blank Space */
+        .blank-space-box { resize: vertical; overflow: hidden; min-height: 50px; background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 20px 20px; }
+
+        /* Prevent page breaks inside question blocks */
+        .avoid-break { page-break-inside: avoid !important; break-inside: avoid !important; }
+
+        /* Hover menu for inserting/deleting/dragging specific elements */
         .action-menu { display: none; }
         .question-block:hover .action-menu { display: flex; }
+        .drag-handle { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
+        .sortable-ghost { opacity: 0.4; }
 
         /* Print optimizations */
         @media print {
@@ -54,12 +73,13 @@
             .no-print, .sidebar, .export-bar { display: none !important; }
             .a4-paper { margin: 0; box-shadow: none; border: none; padding: 0; }
             .a4-wrapper { overflow: visible !important; }
+            .blank-space-box { resize: none; border: none; }
         }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden">
 
-    <!-- Sidebar Controls (Responsive) -->
+    <!-- Sidebar Controls -->
     <div class="sidebar w-full md:w-64 bg-gray-800 text-white p-5 flex flex-col gap-4 overflow-y-auto z-20 shadow-lg md:h-full max-h-48 md:max-h-full flex-shrink-0">
         <h2 id="ui-tools" class="text-xl font-bold border-b border-gray-600 pb-2 hidden md:block">Tools</h2>
         
@@ -67,11 +87,15 @@
             <button onclick="insertBlock('main')" id="btn-addMain" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-sm whitespace-nowrap shadow">+ Main Question</button>
             <button onclick="insertBlock('sub')" id="btn-addSub" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-sm whitespace-nowrap shadow">+ Sub Question</button>
             <button onclick="insertBlock('mcq')" id="btn-addMCQ" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-sm whitespace-nowrap shadow">+ MCQ Block</button>
+            <button onclick="insertBlock('space')" id="btn-addSpace" class="bg-indigo-600 hover:bg-indigo-700 p-2 rounded text-sm whitespace-nowrap shadow">+ Blank Space</button>
             <button onclick="insertBlock('or')" id="btn-addOR" class="bg-gray-600 hover:bg-gray-700 p-2 rounded text-sm whitespace-nowrap shadow">+ OR Separator</button>
+            <button onclick="document.getElementById('image-upload').click()" id="btn-addImage" class="bg-indigo-600 hover:bg-indigo-700 p-2 rounded text-sm whitespace-nowrap shadow">+ Insert Image</button>
             <button onclick="insertBlock('footer')" id="btn-addFooter" class="bg-gray-600 hover:bg-gray-700 p-2 rounded text-sm whitespace-nowrap shadow">+ Add Footer</button>
+            <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="insertImage(event)">
         </div>
 
         <div class="mt-auto flex flex-col gap-2 border-t border-gray-600 pt-4 hidden md:flex">
+            <button onclick="openLibraryModal()" class="bg-green-600 hover:bg-green-700 p-2 rounded text-sm font-bold shadow">📁 Paper Library</button>
             <button onclick="resetPaper()" id="btn-clearData" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm font-bold shadow">Clear All Data</button>
         </div>
     </div>
@@ -79,29 +103,40 @@
     <!-- Main Workspace -->
     <div class="flex-grow flex flex-col relative h-full overflow-hidden">
         
-        <!-- Top Export & Language Bar -->
+        <!-- Export, Format & Language Bar -->
         <div class="export-bar bg-white shadow p-3 flex flex-wrap justify-between items-center gap-3 z-10 border-b">
-            <div class="flex items-center gap-2">
-                <label for="lang-select" class="font-bold text-gray-600 text-sm" id="ui-lang">Language:</label>
-                <select id="lang-select" onchange="changeLanguage()" class="border p-1 rounded text-sm bg-gray-50 outline-none">
-                    <option value="en">English</option>
-                    <option value="gu">ગુજરાતી (Gujarati)</option>
-                    <option value="hi">हिंदी (Hindi)</option>
-                </select>
+            
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label for="lang-select" class="font-bold text-gray-600 text-sm" id="ui-lang">Lang:</label>
+                    <select id="lang-select" onchange="changeLanguage()" class="border p-1 rounded text-sm outline-none">
+                        <option value="en">EN</option>
+                        <option value="gu">GU</option>
+                        <option value="hi">HI</option>
+                    </select>
+                </div>
+
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleDarkMode()" class="text-sm border p-1 px-2 rounded hover:bg-gray-200 text-black bg-white" title="Toggle Dark Mode">🌙</button>
+
+                <!-- Rich Text Formatters -->
+                <div class="flex items-center gap-1 border-l pl-4 border-gray-300">
+                    <button class="format-btn" onclick="formatText('bold')" title="Bold"><b>B</b></button>
+                    <button class="format-btn" onclick="formatText('italic')" title="Italic"><i>I</i></button>
+                    <button class="format-btn" onclick="formatText('underline')" title="Underline"><u>U</u></button>
+                </div>
             </div>
             
             <div class="flex gap-2 ml-auto">
                 <button onclick="exportWord()" id="btn-dlWord" class="bg-blue-100 text-blue-800 px-3 py-1.5 text-sm md:text-base md:px-4 md:py-2 rounded font-bold hover:bg-blue-200 shadow">DOC</button>
                 <button onclick="exportJPG()" id="btn-dlJPG" class="bg-green-100 text-green-800 px-3 py-1.5 text-sm md:text-base md:px-4 md:py-2 rounded font-bold hover:bg-green-200 shadow">JPG</button>
                 <button onclick="exportPDF()" id="btn-dlPDF" class="bg-red-100 text-red-800 px-3 py-1.5 text-sm md:text-base md:px-4 md:py-2 rounded font-bold hover:bg-red-200 shadow">PDF</button>
-                <button onclick="resetPaper()" id="btn-clearDataMobile" class="md:hidden bg-red-600 text-white px-3 py-1.5 rounded font-bold text-sm shadow">Clear</button>
             </div>
         </div>
 
         <!-- A4 Paper Container with Scroll -->
         <div class="a4-wrapper flex-grow overflow-auto p-4 md:p-8">
             <div id="paper" class="a4-paper relative">
-                <!-- Wrapper to capture content properly -->
                 <div id="paper-content">
                     <div class="text-center font-bold text-xl uppercase" contenteditable="true">NOBLE INSTITUTE OF COMPUTER SCIENCE, DABHOI</div>
                     
@@ -121,32 +156,57 @@
                     </div>
                     
                     <div class="text-right font-bold mt-1" contenteditable="true">Marks: 25</div>
-                    
                     <hr class="border-black my-3 border-t-2">
 
-                    <!-- Dynamic Questions Container -->
+                    <!-- Dynamic Questions Container (Sortable) -->
                     <div id="questions-container" class="flex flex-col gap-3">
-                        <!-- Default Question Block mapping to CF_INTERNAL_PAPER.pdf -->
-                        <div class="question-block avoid-break relative group">
+                        
+                        <div class="question-block avoid-break relative group" data-type="main">
                             <div class="flex justify-between font-bold mt-2">
-                                <div contenteditable="true">Q-1) Answer the following questions.</div>
-                                <div contenteditable="true">10</div>
-                            </div>
-                            <div class="flex mt-1">
-                                <div class="mr-2" contenteditable="true">1)</div>
-                                <div class="flex-grow" contenteditable="true">Explain the Evolution of Computers from the first generation to the fifth generation.</div>
+                                <div class="flex flex-grow">
+                                    <div class="q-main-num mr-2">Q-1)</div>
+                                    <div class="flex-grow" contenteditable="true">Answer the following questions.</div>
+                                </div>
+                                <div contenteditable="true" class="ml-2">10</div>
                             </div>
                             
-                            <!-- Hover Action Menu (Hidden on Print) -->
-                            <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28">
-                                <span class="text-[10px] text-gray-400 font-bold text-center border-b pb-1 mb-1">Insert Below</span>
+                            <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28 text-black">
+                                <div class="drag-handle text-center bg-gray-200 hover:bg-gray-300 font-bold p-1 mb-1 rounded text-gray-700" title="Drag to reorder">☰ Drag</div>
                                 <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ Sub Q</button>
-                                <button onclick="insertBlock('mcq', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ MCQ</button>
-                                <button onclick="insertBlock('or', this)" class="text-left text-gray-600 hover:bg-gray-50 p-1">+ OR</button>
                                 <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1 border-t mt-1 font-bold">Delete</button>
                             </div>
                         </div>
+
+                        <div class="question-block avoid-break relative group" data-type="sub">
+                            <div class="flex mt-1">
+                                <div class="mr-2 q-sub-num">1)</div>
+                                <div class="flex-grow" contenteditable="true">Explain the Evolution of Computers from the first generation to the fifth generation.</div>
+                            </div>
+                            <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28 text-black">
+                                <div class="drag-handle text-center bg-gray-200 hover:bg-gray-300 font-bold p-1 mb-1 rounded text-gray-700">☰ Drag</div>
+                                <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ Sub Q</button>
+                                <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1 border-t mt-1 font-bold">Delete</button>
+                            </div>
+                        </div>
+                        
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paper Library Modal -->
+    <div id="library-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-96 text-black">
+            <h3 class="font-bold text-lg border-b pb-2 mb-4">Paper Library</h3>
+            <div id="library-list" class="max-h-60 overflow-y-auto mb-4 flex flex-col gap-2">
+                <!-- Saved papers injected here -->
+            </div>
+            <div class="border-t pt-4">
+                <input type="text" id="save-paper-name" placeholder="Enter Paper Name..." class="w-full border p-2 rounded mb-2 text-sm outline-blue-500">
+                <div class="flex justify-between">
+                    <button onclick="saveToLibrary()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-bold shadow">Save Current</button>
+                    <button onclick="closeLibraryModal()" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded text-sm font-bold shadow">Close</button>
                 </div>
             </div>
         </div>
@@ -157,18 +217,21 @@
         // --- Translations Dictionary ---
         const i18n = {
             en: {
-                tools: "Tools", lang: "Language:", addMain: "+ Main Question", addSub: "+ Sub Question",
-                addMCQ: "+ MCQ Block", addOR: "+ OR Separator", addFooter: "+ Add Footer",
+                tools: "Tools", lang: "Lang:", addSpace: "+ Blank Space",
+                addMain: "+ Main Question", addSub: "+ Sub Question",
+                addMCQ: "+ MCQ Block", addOR: "+ OR Separator", addImage: "+ Insert Image", addFooter: "+ Add Footer",
                 clearData: "Clear All Data", dlWord: "Download DOC", dlJPG: "Download JPG", dlPDF: "Download PDF"
             },
             gu: {
-                tools: "સાધનો", lang: "ભાષા:", addMain: "+ મુખ્ય પ્રશ્ન", addSub: "+ પેટા પ્રશ્ન",
-                addMCQ: "+ બહુવિકલ્પી (MCQ)", addOR: "+ OR વિભાજક", addFooter: "+ ફૂટર ઉમેરો",
+                tools: "સાધનો", lang: "ભાષા:", addSpace: "+ ખાલી જગ્યા",
+                addMain: "+ મુખ્ય પ્રશ્ન", addSub: "+ પેટા પ્રશ્ન",
+                addMCQ: "+ બહુવિકલ્પી (MCQ)", addOR: "+ OR વિભાજક", addImage: "+ ચિત્ર ઉમેરો", addFooter: "+ ફૂટર ઉમેરો",
                 clearData: "બધો ડેટા ભૂંસી નાખો", dlWord: "DOC ડાઉનલોડ", dlJPG: "JPG ડાઉનલોડ", dlPDF: "PDF ડાઉનલોડ"
             },
             hi: {
-                tools: "उपकरण", lang: "भाषा:", addMain: "+ मुख्य प्रश्न", addSub: "+ उप प्रश्न",
-                addMCQ: "+ बहुविकल्पीय (MCQ)", addOR: "+ OR विभाजक", addFooter: "+ पाद लेख जोड़ें",
+                tools: "उपकरण", lang: "भाषा:", addSpace: "+ खाली जगह",
+                addMain: "+ मुख्य प्रश्न", addSub: "+ उप प्रश्न",
+                addMCQ: "+ बहुविकल्पीय (MCQ)", addOR: "+ OR विभाजक", addImage: "+ छवि डालें", addFooter: "+ पाद लेख जोड़ें",
                 clearData: "सभी डेटा मिटाएं", dlWord: "DOC डाउनलोड", dlJPG: "JPG डाउनलोड", dlPDF: "PDF डाउनलोड"
             }
         };
@@ -176,60 +239,102 @@
         function changeLanguage() {
             const lang = document.getElementById('lang-select').value;
             const dict = i18n[lang];
-            
             document.getElementById('ui-tools').innerText = dict.tools;
             document.getElementById('ui-lang').innerText = dict.lang;
             document.getElementById('btn-addMain').innerText = dict.addMain;
             document.getElementById('btn-addSub').innerText = dict.addSub;
             document.getElementById('btn-addMCQ').innerText = dict.addMCQ;
+            document.getElementById('btn-addSpace').innerText = dict.addSpace;
             document.getElementById('btn-addOR').innerText = dict.addOR;
+            document.getElementById('btn-addImage').innerText = dict.addImage;
             document.getElementById('btn-addFooter').innerText = dict.addFooter;
             document.getElementById('btn-clearData').innerText = dict.clearData;
-            document.getElementById('btn-clearDataMobile').innerText = dict.clearData;
             document.getElementById('btn-dlWord').innerText = dict.dlWord;
             document.getElementById('btn-dlJPG').innerText = dict.dlJPG;
             document.getElementById('btn-dlPDF').innerText = dict.dlPDF;
         }
 
-        // --- Core Variables & Auto-Save ---
-        const paperContent = document.getElementById('questions-container');
-        const fullPaper = document.getElementById('paper');
+        // --- Core Formatting & UX Features ---
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
 
-        fullPaper.addEventListener('input', () => {
-            localStorage.setItem('examPaperDraft', fullPaper.innerHTML);
+        function formatText(command) {
+            document.execCommand(command, false, null);
+            saveData();
+        }
+
+        // --- Drag and Drop Initialization ---
+        const container = document.getElementById('questions-container');
+        new Sortable(container, {
+            handle: '.drag-handle',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function () {
+                updateNumbering(); // Recalculate numbers after drop
+                saveData();
+            }
         });
+
+        // --- Auto-Numbering Engine ---
+        function updateNumbering() {
+            let mainIndex = 0;
+            let subIndex = 0;
+            const blocks = document.querySelectorAll('.question-block');
+            
+            blocks.forEach(block => {
+                const type = block.getAttribute('data-type');
+                if (type === 'main') {
+                    mainIndex++;
+                    subIndex = 0; // Reset sub-index when new main question starts
+                    const numEl = block.querySelector('.q-main-num');
+                    if (numEl) numEl.innerText = `Q-${mainIndex})`;
+                } else if (type === 'sub' || type === 'mcq') {
+                    subIndex++;
+                    const numEl = block.querySelector('.q-sub-num');
+                    if (numEl) numEl.innerText = `${subIndex})`;
+                }
+            });
+        }
+
+        // --- Core Variables & Auto-Save ---
+        const fullPaper = document.getElementById('paper');
+        fullPaper.addEventListener('input', () => { saveData(); });
 
         window.onload = () => {
             const savedDraft = localStorage.getItem('examPaperDraft');
-            if (savedDraft) fullPaper.innerHTML = savedDraft;
+            if (savedDraft) { document.getElementById('paper-content').innerHTML = savedDraft; }
+            updateNumbering();
         };
 
         function saveData() {
-            localStorage.setItem('examPaperDraft', fullPaper.innerHTML);
+            localStorage.setItem('examPaperDraft', document.getElementById('paper-content').innerHTML);
         }
 
         // --- Block HTML Generator ---
-        // Creates the HTML structure for inserting specific blocks along with the hover menu
         function getBlockHTML(type) {
             let innerHTML = '';
             
             if (type === 'main') {
                 innerHTML = `
                     <div class="flex justify-between font-bold mt-4">
-                        <div contenteditable="true">Q-X) Enter Question Title Here.</div>
-                        <div contenteditable="true">10</div>
+                        <div class="flex flex-grow">
+                            <div class="q-main-num mr-2">Q-X)</div>
+                            <div class="flex-grow" contenteditable="true">Enter Question Title Here.</div>
+                        </div>
+                        <div contenteditable="true" class="ml-2">10</div>
                     </div>`;
             } else if (type === 'sub') {
                 innerHTML = `
                     <div class="flex mt-1">
-                        <div class="mr-2" contenteditable="true">1)</div>
+                        <div class="mr-2 q-sub-num">1)</div>
                         <div class="flex-grow" contenteditable="true">Enter sub-question details here...</div>
                     </div>`;
             } else if (type === 'mcq') {
                 innerHTML = `
                     <div class="mt-2">
                         <div class="flex">
-                            <div class="mr-2" contenteditable="true">1)</div>
+                            <div class="mr-2 q-sub-num">1)</div>
                             <div class="flex-grow" contenteditable="true">Enter MCQ Question here:</div>
                         </div>
                         <div class="grid grid-cols-2 gap-1 mt-1 ml-6">
@@ -239,6 +344,8 @@
                             <div contenteditable="true">d) Option D</div>
                         </div>
                     </div>`;
+            } else if (type === 'space') {
+                innerHTML = `<div class="blank-space-box mt-2 w-full border-2 border-dashed border-gray-300" title="Drag bottom right corner to resize space"></div>`;
             } else if (type === 'or') {
                 innerHTML = `<div class="text-center font-bold my-3" contenteditable="true">OR</div>`;
             } else if (type === 'footer') {
@@ -246,13 +353,14 @@
             }
 
             return `
-                <div class="question-block avoid-break relative group">
+                <div class="question-block avoid-break relative group mt-1" data-type="${type}">
                     ${innerHTML}
-                    <!-- Action Menu -->
-                    <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28">
+                    <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28 text-black">
+                        <div class="drag-handle text-center bg-gray-200 hover:bg-gray-300 font-bold p-1 mb-1 rounded text-gray-700" title="Drag to reorder">☰ Drag</div>
                         <span class="text-[10px] text-gray-400 font-bold text-center border-b pb-1 mb-1">Insert Below</span>
                         <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ Sub Q</button>
                         <button onclick="insertBlock('mcq', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ MCQ</button>
+                        <button onclick="insertBlock('space', this)" class="text-left text-indigo-600 hover:bg-indigo-50 p-1">+ Space</button>
                         <button onclick="insertBlock('or', this)" class="text-left text-gray-600 hover:bg-gray-50 p-1">+ OR</button>
                         <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1 border-t mt-1 font-bold">Delete</button>
                     </div>
@@ -260,37 +368,155 @@
             `;
         }
 
-        // --- Smart Insertion & Deletion ---
-        // If btnContext is null, append to end. If provided, insert immediately after that block.
         function insertBlock(type, btnContext = null) {
             const htmlString = getBlockHTML(type);
-            
             if (btnContext) {
-                // Find the parent block of the button clicked and insert directly after it
-                const parentBlock = btnContext.closest('.question-block');
-                parentBlock.insertAdjacentHTML('afterend', htmlString);
+                btnContext.closest('.question-block').insertAdjacentHTML('afterend', htmlString);
             } else {
-                // Insert at the bottom of the paper
-                paperContent.insertAdjacentHTML('beforeend', htmlString);
+                document.getElementById('questions-container').insertAdjacentHTML('beforeend', htmlString);
             }
+            updateNumbering();
             saveData();
         }
 
         function deleteBlock(btnContext) {
             if(confirm("Delete this section?")) {
                 btnContext.closest('.question-block').remove();
+                updateNumbering();
                 saveData();
             }
         }
 
+        function insertImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgHTML = `
+                    <div class="question-block avoid-break relative group mt-3 flex justify-center" data-type="img">
+                        <img src="${e.target.result}" style="max-width: 60%; height: auto; border: 1px solid #ccc;" alt="Diagram">
+                        <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28 text-black">
+                            <div class="drag-handle text-center bg-gray-200 hover:bg-gray-300 font-bold p-1 mb-1 rounded text-gray-700">☰ Drag</div>
+                            <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1 font-bold">Delete</button>
+                        </div>
+                    </div>`;
+                document.getElementById('questions-container').insertAdjacentHTML('beforeend', imgHTML);
+                updateNumbering();
+                saveData();
+            };
+            reader.readAsDataURL(file);
+            event.target.value = ''; 
+        }
+
         function resetPaper() {
-            if(confirm("Are you sure you want to clear the entire paper? This cannot be undone.")) {
+            if(confirm("Clear paper? Cannot be undone.")) {
                 localStorage.removeItem('examPaperDraft');
                 location.reload(); 
             }
         }
 
-        // --- Export Functions (with Anti-Cutting config) --- //
+        // --- Multiple Paper Library System ---
+        function openLibraryModal() {
+            document.getElementById('library-modal').classList.remove('hidden');
+            renderLibraryList();
+        }
+        function closeLibraryModal() {
+            document.getElementById('library-modal').classList.add('hidden');
+        }
+        
+        function saveToLibrary() {
+            const name = document.getElementById('save-paper-name').value.trim();
+            if(!name) return alert("Please enter a name for this paper.");
+            
+            let library = JSON.parse(localStorage.getItem('paperLibrary')) || {};
+            library[name] = document.getElementById('paper-content').innerHTML;
+            localStorage.setItem('paperLibrary', JSON.stringify(library));
+            
+            document.getElementById('save-paper-name').value = '';
+            renderLibraryList();
+            alert("Paper saved securely to your browser.");
+        }
+
+        function renderLibraryList() {
+            const library = JSON.parse(localStorage.getItem('paperLibrary')) || {};
+            const listDiv = document.getElementById('library-list');
+            listDiv.innerHTML = '';
+            
+            if(Object.keys(library).length === 0) {
+                listDiv.innerHTML = '<p class="text-gray-500 text-sm">No saved papers yet.</p>';
+                return;
+            }
+
+            for (const [name, content] of Object.entries(library)) {
+                const item = document.createElement('div');
+                item.className = "flex justify-between items-center bg-gray-100 p-2 rounded border";
+                item.innerHTML = `
+                    <span class="font-bold text-sm truncate w-48">${name}</span>
+                    <div class="flex gap-2">
+                        <button onclick="loadFromLibrary('${name}')" class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">Load</button>
+                        <button onclick="deleteFromLibrary('${name}')" class="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Del</button>
+                    </div>
+                `;
+                listDiv.appendChild(item);
+            }
+        }
+
+        function loadFromLibrary(name) {
+            if(confirm("Load this paper? Current unsaved progress will be lost.")) {
+                const library = JSON.parse(localStorage.getItem('paperLibrary'));
+                document.getElementById('paper-content').innerHTML = library[name];
+                saveData();
+                closeLibraryModal();
+            }
+        }
+
+        function deleteFromLibrary(name) {
+            if(confirm(`Delete "${name}" from library?`)) {
+                let library = JSON.parse(localStorage.getItem('paperLibrary'));
+                delete library[name];
+                localStorage.setItem('paperLibrary', JSON.stringify(library));
+                renderLibraryList();
+            }
+        }
+
+        // --- JSON Import/Export ---
+        function exportJSON() {
+            const content = document.getElementById('paper-content').innerHTML;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ html: content }));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "Question_Paper_Backup.json");
+            dlAnchorElem.click();
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.html) {
+                        document.getElementById('paper-content').innerHTML = data.html;
+                        saveData();
+                        updateNumbering();
+                        alert("Paper successfully imported!");
+                    }
+                } catch(err) {
+                    alert("Invalid JSON file.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
+        }
+
+        // --- Document Export Functions --- 
+        function hideActionMenusForExport() {
+            document.querySelectorAll('.action-menu').forEach(el => el.style.display = 'none');
+        }
+        function restoreActionMenus() {
+            document.querySelectorAll('.action-menu').forEach(el => el.style.display = '');
+        }
 
         function exportPDF() {
             const element = document.getElementById('paper');
@@ -300,8 +526,6 @@
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                // This command tells the PDF generator to strictly enforce page breaks 
-                // on elements with the class '.avoid-break'
                 pagebreak:    { mode: ['css', 'legacy'], avoid: '.avoid-break' } 
             };
             html2pdf().set(opt).from(element).save();
@@ -309,37 +533,26 @@
 
         function exportJPG() {
             const element = document.getElementById('paper');
-            
-            // Hide action menus during canvas capture just in case
-            document.querySelectorAll('.action-menu').forEach(el => el.style.display = 'none');
-            
+            hideActionMenusForExport();
             html2canvas(element, { scale: 2 }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = 'Question_Paper.jpg';
                 link.href = canvas.toDataURL('image/jpeg', 0.9);
                 link.click();
-                
-                // Restore normal display behavior
-                document.querySelectorAll('.action-menu').forEach(el => el.style.display = '');
+                restoreActionMenus();
             });
         }
 
         function exportWord() {
             const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Question Paper</title></head><body>";
             const footer = "</body></html>";
-            
             const clone = document.getElementById('paper').cloneNode(true);
-            
-            // Remove interactive elements and contenteditable tags for Word
             const editables = clone.querySelectorAll('[contenteditable="true"]');
             editables.forEach(el => el.removeAttribute('contenteditable'));
-            
             const noPrintItems = clone.querySelectorAll('.no-print');
             noPrintItems.forEach(el => el.remove());
-
             const sourceHTML = header + clone.innerHTML + footer;
             const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
-            
             const fileDownload = document.createElement("a");
             document.body.appendChild(fileDownload);
             fileDownload.href = source;
