@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> SiddhiPatra </title>
+    <title>SiddhiPatra - Exam Paper Generator</title>
     
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,6 +12,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <!-- SECURE MathJax for Mathematical & Statistical Equations (No Polyfill needed) -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <style>
         /* Light/Dark Mode Transitions */
@@ -80,17 +83,24 @@
 <body class="flex flex-col md:flex-row h-screen overflow-hidden">
 
     <!-- Sidebar Controls -->
-    <div class="sidebar w-full md:w-64 bg-gray-800 text-white p-5 flex flex-col gap-4 overflow-y-auto z-20 shadow-lg md:h-full max-h-48 md:max-h-full flex-shrink-0">
-        <h2 id="ui-tools" class="text-xl font-bold border-b border-gray-600 pb-2 hidden md:block">Tools</h2>
+    <div class="sidebar w-full md:w-64 bg-gray-800 text-white p-5 flex flex-col gap-3 overflow-y-auto z-20 shadow-lg md:h-full max-h-48 md:max-h-full flex-shrink-0">
+        <!-- SiddhiPatra Branding -->
+        <h1 class="text-2xl font-black text-blue-400 tracking-wide hidden md:block">SiddhiPatra</h1>
         
+        <h2 id="ui-tools" class="text-sm font-bold border-b border-gray-600 pb-1 mt-2 hidden md:block text-gray-300">Basic Tools</h2>
         <div class="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
             <button onclick="insertBlock('main')" id="btn-addMain" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-sm whitespace-nowrap shadow">+ Main Question</button>
             <button onclick="insertBlock('sub')" id="btn-addSub" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-sm whitespace-nowrap shadow">+ Sub Question</button>
             <button onclick="insertBlock('mcq')" id="btn-addMCQ" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-sm whitespace-nowrap shadow">+ MCQ Block</button>
             <button onclick="insertBlock('space')" id="btn-addSpace" class="bg-indigo-600 hover:bg-indigo-700 p-2 rounded text-sm whitespace-nowrap shadow">+ Blank Space</button>
             <button onclick="insertBlock('or')" id="btn-addOR" class="bg-gray-600 hover:bg-gray-700 p-2 rounded text-sm whitespace-nowrap shadow">+ OR Separator</button>
+        </div>
+
+        <h2 id="ui-math-tools" class="text-sm font-bold border-b border-gray-600 pb-1 mt-2 hidden md:block text-gray-300">Maths & Media</h2>
+        <div class="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+            <button onclick="insertBlock('table')" id="btn-addTable" class="bg-indigo-600 hover:bg-indigo-700 p-2 rounded text-sm whitespace-nowrap shadow">+ Data Table</button>
             <button onclick="document.getElementById('image-upload').click()" id="btn-addImage" class="bg-indigo-600 hover:bg-indigo-700 p-2 rounded text-sm whitespace-nowrap shadow">+ Insert Image</button>
-            <button onclick="insertBlock('footer')" id="btn-addFooter" class="bg-gray-600 hover:bg-gray-700 p-2 rounded text-sm whitespace-nowrap shadow">+ Add Footer</button>
+            <button onclick="renderMath()" id="btn-renderMath" class="bg-purple-600 hover:bg-purple-700 p-2 rounded text-sm whitespace-nowrap shadow font-bold text-left">∑ Render Math</button>
             <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="insertImage(event)">
         </div>
 
@@ -128,7 +138,10 @@
             </div>
             
             <div class="flex gap-2 ml-auto">
-                
+                <button onclick="exportJSON()" class="bg-gray-200 text-gray-800 px-3 py-1.5 text-sm md:text-base md:px-3 md:py-2 rounded font-bold hover:bg-gray-300 shadow">Export JSON</button>
+                <button onclick="document.getElementById('json-upload').click()" class="bg-gray-200 text-gray-800 px-3 py-1.5 text-sm md:text-base md:px-3 md:py-2 rounded font-bold hover:bg-gray-300 shadow">Import JSON</button>
+                <input type="file" id="json-upload" accept=".json" class="hidden" onchange="importJSON(event)">
+
                 <button onclick="exportWord()" id="btn-dlWord" class="bg-blue-100 text-blue-800 px-3 py-1.5 text-sm md:text-base md:px-4 md:py-2 rounded font-bold hover:bg-blue-200 shadow">DOC</button>
                 <button onclick="exportJPG()" id="btn-dlJPG" class="bg-green-100 text-green-800 px-3 py-1.5 text-sm md:text-base md:px-4 md:py-2 rounded font-bold hover:bg-green-200 shadow">JPG</button>
                 <button onclick="exportPDF()" id="btn-dlPDF" class="bg-red-100 text-red-800 px-3 py-1.5 text-sm md:text-base md:px-4 md:py-2 rounded font-bold hover:bg-red-200 shadow">PDF</button>
@@ -199,7 +212,7 @@
     <!-- Paper Library Modal -->
     <div id="library-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-6 rounded-lg shadow-xl w-96 text-black">
-            <h3 class="font-bold text-lg border-b pb-2 mb-4">Paper Library</h3>
+            <h3 class="font-bold text-lg border-b pb-2 mb-4">SiddhiPatra Library</h3>
             <div id="library-list" class="max-h-60 overflow-y-auto mb-4 flex flex-col gap-2">
                 <!-- Saved papers injected here -->
             </div>
@@ -218,21 +231,24 @@
         // --- Translations Dictionary ---
         const i18n = {
             en: {
-                tools: "Tools", lang: "Lang:", addSpace: "+ Blank Space",
+                tools: "Basic Tools", lang: "Lang:", addSpace: "+ Blank Space",
                 addMain: "+ Main Question", addSub: "+ Sub Question",
-                addMCQ: "+ MCQ Block", addOR: "+ OR Separator", addImage: "+ Insert Image", addFooter: "+ Add Footer",
+                addMCQ: "+ MCQ Block", addOR: "+ OR Separator", addImage: "+ Insert Image", 
+                addTable: "+ Data Table", renderMath: "∑ Render Math",
                 clearData: "Clear All Data", dlWord: "Download DOC", dlJPG: "Download JPG", dlPDF: "Download PDF"
             },
             gu: {
                 tools: "સાધનો", lang: "ભાષા:", addSpace: "+ ખાલી જગ્યા",
                 addMain: "+ મુખ્ય પ્રશ્ન", addSub: "+ પેટા પ્રશ્ન",
-                addMCQ: "+ બહુવિકલ્પી (MCQ)", addOR: "+ OR વિભાજક", addImage: "+ ચિત્ર ઉમેરો", addFooter: "+ ફૂટર ઉમેરો",
+                addMCQ: "+ બહુવિકલ્પી (MCQ)", addOR: "+ OR વિભાજક", addImage: "+ ચિત્ર ઉમેરો", 
+                addTable: "+ ડેટા ટેબલ", renderMath: "∑ ગણિત બતાવો",
                 clearData: "બધો ડેટા ભૂંસી નાખો", dlWord: "DOC ડાઉનલોડ", dlJPG: "JPG ડાઉનલોડ", dlPDF: "PDF ડાઉનલોડ"
             },
             hi: {
                 tools: "उपकरण", lang: "भाषा:", addSpace: "+ खाली जगह",
                 addMain: "+ मुख्य प्रश्न", addSub: "+ उप प्रश्न",
-                addMCQ: "+ बहुविकल्पीय (MCQ)", addOR: "+ OR विभाजक", addImage: "+ छवि डालें", addFooter: "+ पाद लेख जोड़ें",
+                addMCQ: "+ बहुविकल्पीय (MCQ)", addOR: "+ OR विभाजक", addImage: "+ छवि डालें", 
+                addTable: "+ डेटा टेबल", renderMath: "∑ गणित दिखाएं",
                 clearData: "सभी डेटा मिटाएं", dlWord: "DOC डाउनलोड", dlJPG: "JPG डाउनलोड", dlPDF: "PDF डाउनलोड"
             }
         };
@@ -248,7 +264,8 @@
             document.getElementById('btn-addSpace').innerText = dict.addSpace;
             document.getElementById('btn-addOR').innerText = dict.addOR;
             document.getElementById('btn-addImage').innerText = dict.addImage;
-            document.getElementById('btn-addFooter').innerText = dict.addFooter;
+            document.getElementById('btn-addTable').innerText = dict.addTable;
+            document.getElementById('btn-renderMath').innerText = dict.renderMath;
             document.getElementById('btn-clearData').innerText = dict.clearData;
             document.getElementById('btn-dlWord').innerText = dict.dlWord;
             document.getElementById('btn-dlJPG').innerText = dict.dlJPG;
@@ -256,13 +273,20 @@
         }
 
         // --- Core Formatting & UX Features ---
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-        }
+        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
 
         function formatText(command) {
             document.execCommand(command, false, null);
             saveData();
+        }
+
+        // --- MathJax Render Engine ---
+        function renderMath() {
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typesetPromise([document.getElementById('paper')]).then(() => {
+                    saveData();
+                });
+            }
         }
 
         // --- Drag and Drop Initialization ---
@@ -271,23 +295,18 @@
             handle: '.drag-handle',
             animation: 150,
             ghostClass: 'sortable-ghost',
-            onEnd: function () {
-                updateNumbering(); // Recalculate numbers after drop
-                saveData();
-            }
+            onEnd: function () { updateNumbering(); saveData(); }
         });
 
         // --- Auto-Numbering Engine ---
         function updateNumbering() {
-            let mainIndex = 0;
-            let subIndex = 0;
+            let mainIndex = 0; let subIndex = 0;
             const blocks = document.querySelectorAll('.question-block');
             
             blocks.forEach(block => {
                 const type = block.getAttribute('data-type');
                 if (type === 'main') {
-                    mainIndex++;
-                    subIndex = 0; // Reset sub-index when new main question starts
+                    mainIndex++; subIndex = 0;
                     const numEl = block.querySelector('.q-main-num');
                     if (numEl) numEl.innerText = `Q-${mainIndex})`;
                 } else if (type === 'sub' || type === 'mcq') {
@@ -308,9 +327,7 @@
             updateNumbering();
         };
 
-        function saveData() {
-            localStorage.setItem('examPaperDraft', document.getElementById('paper-content').innerHTML);
-        }
+        function saveData() { localStorage.setItem('examPaperDraft', document.getElementById('paper-content').innerHTML); }
 
         // --- Block HTML Generator ---
         function getBlockHTML(type) {
@@ -349,8 +366,32 @@
                 innerHTML = `<div class="blank-space-box mt-2 w-full border-2 border-dashed border-gray-300" title="Drag bottom right corner to resize space"></div>`;
             } else if (type === 'or') {
                 innerHTML = `<div class="text-center font-bold my-3" contenteditable="true">OR</div>`;
-            } else if (type === 'footer') {
-                innerHTML = `<div class="text-center font-bold mt-10 uppercase tracking-widest" contenteditable="true">ALL THE BEST</div>`;
+            } else if (type === 'table') {
+                innerHTML = `
+                    <table class="w-full border-collapse border border-black text-center mt-3 mb-3 text-sm">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border border-black p-2" contenteditable="true">Component</th>
+                                <th class="border border-black p-2" contenteditable="true">MW</th>
+                                <th class="border border-black p-2" contenteditable="true">T_c</th>
+                                <th class="border border-black p-2" contenteditable="true">p_c</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-black p-2" contenteditable="true">C1</td>
+                                <td class="border border-black p-2" contenteditable="true">16.04</td>
+                                <td class="border border-black p-2" contenteditable="true">-82.59</td>
+                                <td class="border border-black p-2" contenteditable="true">667.0</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-black p-2" contenteditable="true">C2</td>
+                                <td class="border border-black p-2" contenteditable="true">30.07</td>
+                                <td class="border border-black p-2" contenteditable="true">32.17</td>
+                                <td class="border border-black p-2" contenteditable="true">706.6</td>
+                            </tr>
+                        </tbody>
+                    </table>`;
             }
 
             return `
@@ -362,7 +403,6 @@
                         <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ Sub Q</button>
                         <button onclick="insertBlock('mcq', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ MCQ</button>
                         <button onclick="insertBlock('space', this)" class="text-left text-indigo-600 hover:bg-indigo-50 p-1">+ Space</button>
-                        <button onclick="insertBlock('or', this)" class="text-left text-gray-600 hover:bg-gray-50 p-1">+ OR</button>
                         <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1 border-t mt-1 font-bold">Delete</button>
                     </div>
                 </div>
@@ -376,15 +416,13 @@
             } else {
                 document.getElementById('questions-container').insertAdjacentHTML('beforeend', htmlString);
             }
-            updateNumbering();
-            saveData();
+            updateNumbering(); saveData();
         }
 
         function deleteBlock(btnContext) {
             if(confirm("Delete this section?")) {
                 btnContext.closest('.question-block').remove();
-                updateNumbering();
-                saveData();
+                updateNumbering(); saveData();
             }
         }
 
@@ -402,52 +440,35 @@
                         </div>
                     </div>`;
                 document.getElementById('questions-container').insertAdjacentHTML('beforeend', imgHTML);
-                updateNumbering();
-                saveData();
+                updateNumbering(); saveData();
             };
             reader.readAsDataURL(file);
             event.target.value = ''; 
         }
 
         function resetPaper() {
-            if(confirm("Clear paper? Cannot be undone.")) {
-                localStorage.removeItem('examPaperDraft');
-                location.reload(); 
-            }
+            if(confirm("Clear paper? Cannot be undone.")) { localStorage.removeItem('examPaperDraft'); location.reload(); }
         }
 
         // --- Multiple Paper Library System ---
-        function openLibraryModal() {
-            document.getElementById('library-modal').classList.remove('hidden');
-            renderLibraryList();
-        }
-        function closeLibraryModal() {
-            document.getElementById('library-modal').classList.add('hidden');
-        }
+        function openLibraryModal() { document.getElementById('library-modal').classList.remove('hidden'); renderLibraryList(); }
+        function closeLibraryModal() { document.getElementById('library-modal').classList.add('hidden'); }
         
         function saveToLibrary() {
             const name = document.getElementById('save-paper-name').value.trim();
             if(!name) return alert("Please enter a name for this paper.");
-            
             let library = JSON.parse(localStorage.getItem('paperLibrary')) || {};
             library[name] = document.getElementById('paper-content').innerHTML;
             localStorage.setItem('paperLibrary', JSON.stringify(library));
-            
             document.getElementById('save-paper-name').value = '';
-            renderLibraryList();
-            alert("Paper saved securely to your browser.");
+            renderLibraryList(); alert("Paper saved securely to your browser.");
         }
 
         function renderLibraryList() {
             const library = JSON.parse(localStorage.getItem('paperLibrary')) || {};
             const listDiv = document.getElementById('library-list');
             listDiv.innerHTML = '';
-            
-            if(Object.keys(library).length === 0) {
-                listDiv.innerHTML = '<p class="text-gray-500 text-sm">No saved papers yet.</p>';
-                return;
-            }
-
+            if(Object.keys(library).length === 0) { listDiv.innerHTML = '<p class="text-gray-500 text-sm">No saved papers yet.</p>'; return; }
             for (const [name, content] of Object.entries(library)) {
                 const item = document.createElement('div');
                 item.className = "flex justify-between items-center bg-gray-100 p-2 rounded border";
@@ -466,8 +487,7 @@
             if(confirm("Load this paper? Current unsaved progress will be lost.")) {
                 const library = JSON.parse(localStorage.getItem('paperLibrary'));
                 document.getElementById('paper-content').innerHTML = library[name];
-                saveData();
-                closeLibraryModal();
+                saveData(); closeLibraryModal();
             }
         }
 
@@ -486,7 +506,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ html: content }));
             const dlAnchorElem = document.createElement('a');
             dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", "Question_Paper_Backup.json");
+            dlAnchorElem.setAttribute("download", "SiddhiPatra_Backup.json");
             dlAnchorElem.click();
         }
 
@@ -499,31 +519,24 @@
                     const data = JSON.parse(e.target.result);
                     if (data.html) {
                         document.getElementById('paper-content').innerHTML = data.html;
-                        saveData();
-                        updateNumbering();
-                        alert("Paper successfully imported!");
+                        saveData(); updateNumbering(); alert("Paper successfully imported!");
                     }
-                } catch(err) {
-                    alert("Invalid JSON file.");
-                }
+                } catch(err) { alert("Invalid JSON file."); }
             };
             reader.readAsText(file);
-            event.target.value = ''; // Reset input
+            event.target.value = '';
         }
 
         // --- Document Export Functions --- 
-        function hideActionMenusForExport() {
-            document.querySelectorAll('.action-menu').forEach(el => el.style.display = 'none');
-        }
-        function restoreActionMenus() {
-            document.querySelectorAll('.action-menu').forEach(el => el.style.display = '');
-        }
+        function hideActionMenusForExport() { document.querySelectorAll('.action-menu').forEach(el => el.style.display = 'none'); }
+        function restoreActionMenus() { document.querySelectorAll('.action-menu').forEach(el => el.style.display = ''); }
 
         function exportPDF() {
+            if (typeof MathJax !== 'undefined') MathJax.typeset([document.getElementById('paper')]); // Ensure rendered
             const element = document.getElementById('paper');
             const opt = {
                 margin:       0,
-                filename:     'Question_Paper.pdf',
+                filename:     'SiddhiPatra_Paper.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -533,11 +546,12 @@
         }
 
         function exportJPG() {
+            if (typeof MathJax !== 'undefined') MathJax.typeset([document.getElementById('paper')]);
             const element = document.getElementById('paper');
             hideActionMenusForExport();
             html2canvas(element, { scale: 2 }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = 'Question_Paper.jpg';
+                link.download = 'SiddhiPatra_Paper.jpg';
                 link.href = canvas.toDataURL('image/jpeg', 0.9);
                 link.click();
                 restoreActionMenus();
@@ -545,7 +559,7 @@
         }
 
         function exportWord() {
-            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Question Paper</title></head><body>";
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>SiddhiPatra Paper</title></head><body>";
             const footer = "</body></html>";
             const clone = document.getElementById('paper').cloneNode(true);
             const editables = clone.querySelectorAll('[contenteditable="true"]');
@@ -557,7 +571,7 @@
             const fileDownload = document.createElement("a");
             document.body.appendChild(fileDownload);
             fileDownload.href = source;
-            fileDownload.download = 'Question_Paper.doc';
+            fileDownload.download = 'SiddhiPatra_Paper.doc';
             fileDownload.click();
             document.body.removeChild(fileDownload);
         }
