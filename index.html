@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SiddhiPatra</title>
+    <title>Exam Paper Generator</title>
     
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -128,6 +128,10 @@
             </div>
             
             <div class="flex gap-2 ml-auto">
+                <button onclick="exportJSON()" class="bg-gray-200 text-gray-800 px-3 py-1.5 text-sm md:text-base md:px-3 md:py-2 rounded font-bold hover:bg-gray-300 shadow">Export JSON</button>
+                <button onclick="document.getElementById('json-upload').click()" class="bg-gray-200 text-gray-800 px-3 py-1.5 text-sm md:text-base md:px-3 md:py-2 rounded font-bold hover:bg-gray-300 shadow">Import JSON</button>
+                <input type="file" id="json-upload" accept=".json" class="hidden" onchange="importJSON(event)">
+
                 <button onclick="exportWord()" id="btn-dlWord" class="bg-blue-100 text-blue-800 px-3 py-1.5 text-sm md:text-base md:px-4 md:py-2 rounded font-bold hover:bg-blue-200 shadow">DOC</button>
                 <button onclick="exportJPG()" id="btn-dlJPG" class="bg-green-100 text-green-800 px-3 py-1.5 text-sm md:text-base md:px-4 md:py-2 rounded font-bold hover:bg-green-200 shadow">JPG</button>
                 <button onclick="exportPDF()" id="btn-dlPDF" class="bg-red-100 text-red-800 px-3 py-1.5 text-sm md:text-base md:px-4 md:py-2 rounded font-bold hover:bg-red-200 shadow">PDF</button>
