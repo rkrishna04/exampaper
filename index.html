@@ -46,7 +46,20 @@ body.dark-mode .export-bar select { background-color: #4b5563; color: white; bor
 .format-btn:hover { background: #f3f4f6; }
 body.dark-mode .format-btn { background: #4b5563; color: white; border-color: #6b7280; }
 body.dark-mode .format-btn:hover { background: #6b7280; }
-.blank-space-box { resize: vertical; overflow: hidden; min-height: 50px; background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 20px 20px; }
+
+/* RESIZE BOX for Blank Spaces, Images, and Tables */
+.resize-box { 
+    resize: both; 
+    overflow: hidden; 
+    display: inline-block; 
+    border: 1px dashed transparent; 
+    transition: border 0.2s;
+    position: relative;
+}
+.resize-box:hover { border-color: #3b82f6; }
+.resize-box img, .resize-box table { width: 100%; height: 100%; object-fit: fill; }
+
+.blank-space-box { resize: vertical; overflow: hidden; min-height: 50px; background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 20px 20px; border: 1px dashed #d1d5db; }
 .avoid-break { page-break-inside: avoid !important; break-inside: avoid !important; }
 
 /* Hover Menus */
@@ -62,7 +75,8 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     .no-print, .sidebar, .export-bar, .inline-img-btn { display: none !important; }
     .a4-paper { margin: 0; box-shadow: none; border: none; padding: 0; }
     .a4-wrapper { overflow: visible !important; }
-    .blank-space-box { resize: none; border: none; }
+    .blank-space-box { resize: none; border: none; background: none; }
+    .resize-box { resize: none; border: none !important; }
     [contenteditable="true"] { outline: none !important; background: none !important; }
 }
 </style>
@@ -175,6 +189,34 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Table Generator Modal -->
+<div id="table-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-80 text-black">
+        <h3 class="font-bold text-lg border-b pb-2 mb-4">Create Custom Table</h3>
+        
+        <div class="flex gap-4 mb-4">
+            <div class="flex-1">
+                <label class="text-sm font-bold text-gray-600 block mb-1">Rows</label>
+                <input type="number" id="tbl-rows" value="3" min="1" max="20" class="w-full border p-2 rounded text-center outline-blue-500">
+            </div>
+            <div class="flex-1">
+                <label class="text-sm font-bold text-gray-600 block mb-1">Columns</label>
+                <input type="number" id="tbl-cols" value="3" min="1" max="10" class="w-full border p-2 rounded text-center outline-blue-500">
+            </div>
+        </div>
+        
+        <div class="mb-5 flex items-center gap-2 bg-gray-50 p-2 rounded border">
+            <input type="checkbox" id="tbl-header" checked class="w-4 h-4 text-blue-600">
+            <label for="tbl-header" class="text-sm font-bold cursor-pointer">Include Heading Row?</label>
+        </div>
+        
+        <div class="flex justify-between border-t pt-4">
+            <button onclick="generateCustomTable()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded text-sm font-bold shadow">Create</button>
+            <button onclick="closeTableModal()" class="bg-gray-300 hover:bg-gray-400 px-5 py-2 rounded text-sm font-bold shadow text-gray-800">Cancel</button>
         </div>
     </div>
 </div>
@@ -297,6 +339,66 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         });
     }
 
+    // --- Custom Table Modals & Logic ---
+    let currentInsertContext = null;
+    
+    function openTableModal(btnContext = null) {
+        currentInsertContext = btnContext;
+        document.getElementById('table-modal').classList.remove('hidden');
+    }
+    
+    function closeTableModal() {
+        document.getElementById('table-modal').classList.add('hidden');
+        currentInsertContext = null;
+    }
+
+    function generateCustomTable() {
+        const rows = parseInt(document.getElementById('tbl-rows').value) || 3;
+        const cols = parseInt(document.getElementById('tbl-cols').value) || 3;
+        const hasHeader = document.getElementById('tbl-header').checked;
+        
+        let tableHTML = `<div class="resize-box w-full" style="height: auto; min-height: 50px;" title="Drag bottom right corner to resize">
+            <table class="w-full border-collapse border border-black text-center mt-3 mb-3 text-sm h-full">`;
+        
+        if (hasHeader) {
+            tableHTML += `<thead class="bg-gray-200"><tr>`;
+            for(let c=0; c < cols; c++) {
+                tableHTML += `<th class="border border-black p-2" contenteditable="true">Heading ${c+1}</th>`;
+            }
+            tableHTML += `</tr></thead>`;
+        }
+        
+        tableHTML += `<tbody>`;
+        for(let r=0; r < rows; r++) {
+            tableHTML += `<tr>`;
+            for(let c=0; c < cols; c++) {
+                tableHTML += `<td class="border border-black p-2" contenteditable="true">Data</td>`;
+            }
+            tableHTML += `</tr>`;
+        }
+        tableHTML += `</tbody></table></div>`;
+        
+        const fullBlockHTML = `
+        <div class="question-block avoid-break relative group mt-1" data-type="table">
+            ${tableHTML}
+            <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28 text-black">
+                <div class="drag-handle text-center bg-gray-200 hover:bg-gray-300 font-bold p-1 mb-1 rounded text-gray-700" title="Drag to reorder">≡ Drag</div>
+                <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ Sub Q</button>
+                <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1 border-t mt-1 font-bold">Delete</button>
+            </div>
+        </div>`;
+        
+        if (currentInsertContext) {
+            currentInsertContext.closest('.question-block').insertAdjacentHTML('afterend', fullBlockHTML);
+        } else {
+            document.getElementById('questions-container').insertAdjacentHTML('beforeend', fullBlockHTML);
+        }
+        
+        updateNumbering(); 
+        saveData();
+        closeTableModal();
+    }
+
     // --- Block HTML Generator ---
     function getBlockHTML(type) {
         let innerHTML = "";
@@ -331,36 +433,10 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                 </div>
             </div>`;
         } else if (type === 'space') {
-            innerHTML = `<div class="blank-space-box mt-2 w-full border-2 border-dashed border-gray-300" title="Drag bottom right corner to resize space"></div>`;
+            innerHTML = `<div class="blank-space-box mt-2 w-full" title="Drag bottom right corner to resize space"></div>`;
         } else if (type === 'or') {
             innerHTML = `<div class="text-center font-bold my-3" contenteditable="true">OR</div>`;
-        } else if (type === 'table') {
-            innerHTML = `
-            <table class="w-full border-collapse border border-black text-center mt-3 mb-3 text-sm">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="border border-black p-2" contenteditable="true">Component</th>
-                        <th class="border border-black p-2" contenteditable="true">MW</th>
-                        <th class="border border-black p-2" contenteditable="true">T_c</th>
-                        <th class="border border-black p-2" contenteditable="true">p_c</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="border border-black p-2" contenteditable="true">C1</td>
-                        <td class="border border-black p-2" contenteditable="true">16.04</td>
-                        <td class="border border-black p-2" contenteditable="true">-82.59</td>
-                        <td class="border border-black p-2" contenteditable="true">667.0</td>
-                    </tr>
-                    <tr>
-                        <td class="border border-black p-2" contenteditable="true">C2</td>
-                        <td class="border border-black p-2" contenteditable="true">30.07</td>
-                        <td class="border border-black p-2" contenteditable="true">32.17</td>
-                        <td class="border border-black p-2" contenteditable="true">706.6</td>
-                    </tr>
-                </tbody>
-            </table>`;
-        }
+        } 
 
         return `
         <div class="question-block avoid-break relative group mt-1" data-type="${type}">
@@ -378,6 +454,11 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 
     // --- Insert & Delete Blocks ---
     function insertBlock(type, btnContext = null) {
+        if (type === 'table') {
+            openTableModal(btnContext);
+            return; // Exit here, custom table builder handles HTML injection
+        }
+        
         const htmlString = getBlockHTML(type);
         if (btnContext) {
             btnContext.closest('.question-block').insertAdjacentHTML('afterend', htmlString);
@@ -394,7 +475,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         }
     }
 
-    // --- Insert Image ---
+    // --- Insert Image (With Resizing support) ---
     function insertImage(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -403,7 +484,9 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         reader.onload = function(e) {
             const imgHTML = `
             <div class="question-block avoid-break relative group mt-3 flex justify-center" data-type="img">
-                <img src="${e.target.result}" style="max-width: 60%; height: auto; border: 1px solid #ccc;" alt="Diagram">
+                <div class="resize-box" style="width: 60%; height: auto; min-width: 100px; min-height: 100px;" title="Drag bottom right corner to resize">
+                    <img src="${e.target.result}" style="border: 1px solid #ccc;" alt="Diagram">
+                </div>
                 <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28 text-black">
                     <div class="drag-handle text-center bg-gray-200 hover:bg-gray-300 font-bold p-1 mb-1 rounded text-gray-700">≡ Drag</div>
                     <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1 font-bold">Delete</button>
@@ -507,13 +590,20 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     }
 
     // --- Document Export Functions ---
-    function hideActionMenusForExport() { document.querySelectorAll('.action-menu').forEach(el => el.style.display = 'none'); }
-    function restoreActionMenus() { document.querySelectorAll('.action-menu').forEach(el => el.style.display = ''); }
+    function prepareForExport() {
+        document.querySelectorAll('.action-menu').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.resize-box').forEach(el => el.style.border = 'none');
+    }
+    
+    function restoreAfterExport() {
+        document.querySelectorAll('.action-menu').forEach(el => el.style.display = '');
+        document.querySelectorAll('.resize-box').forEach(el => el.style.border = '');
+    }
 
     function exportPDF() {
         if (typeof MathJax !== 'undefined') MathJax.typeset([document.getElementById('paper')]);
         const element = document.getElementById('paper');
-        hideActionMenusForExport();
+        prepareForExport();
         const opt = {
             margin: 0,
             filename: 'SiddhiPatra_Paper.pdf',
@@ -522,26 +612,30 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: ['css', 'legacy'], avoid: '.avoid-break' }
         };
-        html2pdf().set(opt).from(element).save().then(restoreActionMenus);
+        html2pdf().set(opt).from(element).save().then(restoreAfterExport);
     }
 
     function exportJPG() {
         if (typeof MathJax !== 'undefined') MathJax.typeset([document.getElementById('paper')]);
         const element = document.getElementById('paper');
-        hideActionMenusForExport();
+        prepareForExport();
         html2canvas(element, { scale: 2 }).then(canvas => {
             const link = document.createElement('a');
             link.download = 'SiddhiPatra_Paper.jpg';
             link.href = canvas.toDataURL('image/jpeg', 0.9);
             link.click();
-            restoreActionMenus();
+            restoreAfterExport();
         });
     }
 
     function exportWord() {
         const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>SiddhiPatra Paper</title></head><body>";
         const footer = "</body></html>";
+        
+        prepareForExport(); // Clear borders/menus for clone
         const clone = document.getElementById('paper').cloneNode(true);
+        restoreAfterExport(); // Restore immediately in UI
+        
         const editables = clone.querySelectorAll('[contenteditable="true"]');
         editables.forEach(el => el.removeAttribute('contenteditable'));
         clone.querySelectorAll('.no-print').forEach(el => el.remove());
