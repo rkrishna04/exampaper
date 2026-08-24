@@ -17,230 +17,286 @@
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 <style>
-/* Light/Dark Mode */
-body { background-color: #f3f4f6; transition: background-color 0.3s ease; }
-body.dark-mode { background-color: #1f2937; color: white; }
-body.dark-mode .export-bar { background-color: #374151; color: white; border-color: #4b5563; }
-body.dark-mode .export-bar label, body.dark-mode .export-bar span { color: #e5e7eb; }
-body.dark-mode .export-bar select { background-color: #4b5563; color: white; border-color: #6b7280; }
+/* Light/Dark Mode Transitions */
+body { background-color: #f3f4f6; transition: background-color 0.3s ease, color 0.3s ease; }
+body.dark-mode { background-color: #111827; color: #f9fafb; }
+body.dark-mode .export-bar { background-color: #1f2937; border-color: #374151; }
+body.dark-mode .export-bar button { background-color: #374151; color: white; border: 1px solid #4b5563; }
+body.dark-mode .a4-wrapper { background-color: #374151; }
 
-/* A4 Paper Styling */
+/* Responsive A4 Paper Styling */
 .a4-paper {
-    width: 210mm;
+    width: 100%;
+    max-width: 210mm;
     min-height: 297mm;
-    padding: 20mm;
+    padding: 15px; /* Better for mobile */
     margin: 0 auto;
     background: white;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     font-family: 'Times New Roman', Times, serif;
     color: black;
     box-sizing: border-box;
+    border-radius: 4px;
+}
+@media (min-width: 768px) {
+    .a4-paper { padding: 20mm; }
 }
 
 /* Editing UX */
+[contenteditable="true"] { transition: all 0.2s; border-radius: 2px; padding: 2px; }
 [contenteditable="true"]:hover { background-color: #fefce8; outline: 1px dashed #d1d5db; cursor: text; }
-[contenteditable="true"]:focus { background-color: #ffffff; outline: 1px solid #3b82f6; }
+[contenteditable="true"]:focus { background-color: #ffffff; outline: 2px solid #3b82f6; box-shadow: 0 0 5px rgba(59, 130, 246, 0.3); }
 
 /* Formatting Toolbar */
-.format-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; border-radius: 4px; background: white; color: black; font-weight: bold; cursor: pointer; font-size: 14px; }
-.format-btn:hover { background: #f3f4f6; }
+.format-btn { 
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; 
+    border: 1px solid #e5e7eb; border-radius: 6px; background: white; color: #374151; 
+    font-weight: bold; cursor: pointer; font-size: 14px; transition: all 0.2s;
+}
+.format-btn:hover { background: #f3f4f6; border-color: #d1d5db; }
 body.dark-mode .format-btn { background: #4b5563; color: white; border-color: #6b7280; }
 body.dark-mode .format-btn:hover { background: #6b7280; }
 
 /* RESIZE BOX for Blank Spaces, Images, and Tables */
 .resize-box { 
-    resize: both; 
-    overflow: hidden; 
-    display: inline-block; 
-    border: 1px dashed transparent; 
-    transition: border 0.2s;
-    position: relative;
+    resize: both; overflow: hidden; display: inline-block; 
+    border: 2px dashed transparent; transition: border 0.2s; position: relative;
 }
 .resize-box:hover { border-color: #3b82f6; }
 .resize-box img, .resize-box table { width: 100%; height: 100%; object-fit: fill; }
 
-.blank-space-box { resize: vertical; overflow: hidden; min-height: 50px; background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 20px 20px; border: 1px dashed #d1d5db; }
+.blank-space-box { resize: vertical; overflow: hidden; min-height: 50px; background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 20px 20px; border: 1px dashed #9ca3af; border-radius: 4px; }
 .avoid-break { page-break-inside: avoid !important; break-inside: avoid !important; }
 
-/* Hover Menus */
+/* Hover & Touch Action Menus */
 .action-menu { display: none; }
-.question-block:hover .action-menu { display: flex; }
+/* Mobile friendly: menu shows on hover OR when focused inside the block */
+.question-block:hover .action-menu,
+.question-block:focus-within .action-menu { display: flex; }
+
+/* Responsive adjustments for the action menu */
+@media (max-width: 768px) {
+    .action-menu { 
+        right: 0; top: -35px; flex-direction: row; width: auto; 
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+    }
+    .action-menu button { padding: 4px 8px; border-top: none; border-left: 1px solid #e5e7eb; }
+    .action-menu span { display: none; } /* Hide "Insert Below" text on mobile */
+}
+
 .drag-handle { cursor: grab; }
 .drag-handle:active { cursor: grabbing; }
-.sortable-ghost { opacity: 0.4; }
+.sortable-ghost { opacity: 0.3; background: #e0e7ff; border-radius: 4px; }
+
+/* Hide scrollbar for horizontal scrolling menus */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* Print optimizations */
 @media print {
     body { background: none; }
-    .no-print, .sidebar, .export-bar, .inline-img-btn { display: none !important; }
-    .a4-paper { margin: 0; box-shadow: none; border: none; padding: 0; }
-    .a4-wrapper { overflow: visible !important; }
+    .no-print, .sidebar, .export-bar, .mobile-header, #mobile-overlay { display: none !important; }
+    .a4-paper { margin: 0; box-shadow: none; border: none; padding: 0; border-radius: 0; max-width: none; }
+    .a4-wrapper { overflow: visible !important; background: none !important; padding: 0 !important; }
     .blank-space-box { resize: none; border: none; background: none; }
     .resize-box { resize: none; border: none !important; }
-    [contenteditable="true"] { outline: none !important; background: none !important; }
+    [contenteditable="true"] { outline: none !important; background: none !important; padding: 0; }
 }
 </style>
 </head>
-<body class="flex flex-col md:flex-row h-screen overflow-hidden">
+<body class="flex flex-col h-screen overflow-hidden text-gray-800">
 
-<!-- Sidebar Controls -->
-<div class="sidebar w-full md:w-64 bg-gray-800 text-white p-5 flex flex-col gap-3 overflow-y-auto z-20 shadow-lg md:h-full flex-shrink-0">
-    <h1 class="text-2xl font-black text-blue-400 tracking-wide hidden md:block">SiddhiPatra</h1>
-    
-    <!-- Language Selection -->
-    <div class="flex items-center gap-2 mt-2">
-        <label id="ui-lang" class="text-sm font-bold text-gray-300">Lang:</label>
-        <select id="lang-select" onchange="changeLanguage()" class="bg-gray-700 text-white text-sm p-1 rounded border border-gray-600">
-            <option value="en">English</option>
-            <option value="gu">Gujarati</option>
-            <option value="hi">Hindi</option>
-        </select>
-    </div>
-
-    <h2 id="ui-tools" class="text-sm font-bold border-b border-gray-600 pb-1 mt-2 text-gray-300">Basic Tools</h2>
-    <div class="flex flex-wrap md:flex-col gap-2 pb-2">
-        <button id="btn-addMain" onclick="insertBlock('main')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-sm text-left shadow">+ Main Question</button>
-        <button id="btn-addSub" onclick="insertBlock('sub')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-sm text-left shadow">+ Sub Question</button>
-        <button id="btn-addMCQ" onclick="insertBlock('mcq')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-sm text-left shadow">+ MCQ Block</button>
-        <button id="btn-addSpace" onclick="insertBlock('space')" class="bg-indigo-600 hover:bg-indigo-700 p-2 rounded text-sm text-left shadow">+ Blank Space</button>
-        <button id="btn-addOR" onclick="insertBlock('or')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded text-sm text-left shadow">+ OR Separator</button>
-    </div>
-    
-    <h2 class="text-sm font-bold border-b border-gray-600 pb-1 mt-2 text-gray-300">Maths & Media</h2>
-    <div class="flex flex-wrap md:flex-col gap-2 pb-2">
-        <button id="btn-addTable" onclick="insertBlock('table')" class="bg-indigo-600 hover:bg-indigo-700 p-2 rounded text-sm text-left shadow">+ Data Table</button>
-        <button id="btn-addImage" onclick="document.getElementById('image-upload').click()" class="bg-indigo-600 hover:bg-indigo-700 p-2 rounded text-sm text-left shadow">+ Insert Image</button>
-        <button id="btn-renderMath" onclick="renderMath()" class="bg-purple-600 hover:bg-purple-700 p-2 rounded text-sm text-left shadow font-bold">∑ Render Math</button>
-        <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="insertImage(event)">
-    </div>
-    
-    <div class="mt-auto flex flex-col gap-2 border-t border-gray-600 pt-4">
-        <button onclick="openLibraryModal()" class="bg-green-600 hover:bg-green-700 p-2 rounded text-sm font-bold shadow">Paper Library</button>
-        <button id="btn-clearData" onclick="resetPaper()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm font-bold shadow">Clear All Data</button>
-    </div>
+<!-- Mobile Header (Visible only on small screens) -->
+<div class="mobile-header md:hidden flex items-center justify-between bg-gray-900 text-white p-4 shadow-md z-40 relative">
+    <h1 class="text-xl font-black text-blue-400 tracking-wide">SiddhiPatra</h1>
+    <button onclick="toggleSidebar()" class="p-2 rounded bg-gray-800 hover:bg-gray-700 focus:outline-none">
+        <!-- Hamburger Icon -->
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
 </div>
 
-<!-- Main Workspace -->
-<div class="flex-grow flex flex-col relative h-full overflow-hidden">
-    <!-- Top Toolbar -->
-    <div class="export-bar bg-white shadow p-3 flex flex-wrap justify-between items-center gap-3 z-10 border-b">
-        <div class="flex items-center gap-4">
-            <button onclick="toggleDarkMode()" class="text-sm border p-1 px-2 rounded hover:bg-gray-200 text-black bg-white" title="Toggle Dark Mode">🌓</button>
-            
-            <div class="flex items-center gap-1 border-l pl-3 border-gray-300">
-                <button class="format-btn" onclick="formatText('bold')" title="Bold"><b>B</b></button>
-                <button class="format-btn" onclick="formatText('italic')" title="Italic"><i>I</i></button>
-                <button class="format-btn" onclick="formatText('underline')" title="Underline"><u>U</u></button>
+<!-- Mobile Sidebar Overlay -->
+<div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-20 md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
+
+<div class="flex flex-1 overflow-hidden relative">
+    <!-- Sidebar Controls -->
+    <aside id="sidebar" class="sidebar absolute md:relative inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-gray-900 text-white p-5 flex flex-col gap-4 overflow-y-auto z-30 shadow-2xl md:shadow-none h-full flex-shrink-0">
+        <h1 class="text-2xl font-black text-blue-400 tracking-wide hidden md:block">SiddhiPatra</h1>
+        
+        <!-- Language Selection -->
+        <div class="flex items-center justify-between bg-gray-800 p-2 rounded-lg mt-2 border border-gray-700">
+            <label id="ui-lang" class="text-sm font-bold text-gray-300">Language:</label>
+            <select id="lang-select" onchange="changeLanguage()" class="bg-gray-700 text-white text-sm p-1.5 rounded outline-none border border-gray-600 focus:border-blue-500 transition-colors">
+                <option value="en">English</option>
+                <option value="gu">Gujarati</option>
+                <option value="hi">Hindi</option>
+            </select>
+        </div>
+
+        <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-5">
+            <div>
+                <h2 id="ui-tools" class="text-xs uppercase tracking-wider font-bold text-gray-400 mb-2">Basic Tools</h2>
+                <div class="flex flex-col gap-2">
+                    <button id="btn-addMain" onclick="insertBlock('main'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-blue-600 border border-gray-700 hover:border-blue-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ Main Question</button>
+                    <button id="btn-addSub" onclick="insertBlock('sub'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-blue-600 border border-gray-700 hover:border-blue-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ Sub Question</button>
+                    <button id="btn-addMCQ" onclick="insertBlock('mcq'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-blue-600 border border-gray-700 hover:border-blue-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ MCQ Block</button>
+                    <button id="btn-addSpace" onclick="insertBlock('space'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-indigo-600 border border-gray-700 hover:border-indigo-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ Blank Space</button>
+                    <button id="btn-addOR" onclick="insertBlock('or'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-gray-600 border border-gray-700 hover:border-gray-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ OR Separator</button>
+                </div>
             </div>
             
-            <div class="flex items-center gap-1 border-l pl-3 border-gray-300">
-                <button class="format-btn" onclick="formatText('justifyLeft')" title="Align Left">L</button>
-                <button class="format-btn" onclick="formatText('justifyCenter')" title="Align Center">C</button>
-                <button class="format-btn" onclick="formatText('justifyRight')" title="Align Right">R</button>
+            <div>
+                <h2 class="text-xs uppercase tracking-wider font-bold text-gray-400 mb-2">Maths & Media</h2>
+                <div class="flex flex-col gap-2">
+                    <button id="btn-addTable" onclick="insertBlock('table'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-indigo-600 border border-gray-700 hover:border-indigo-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ Data Table</button>
+                    <button id="btn-addImage" onclick="document.getElementById('image-upload').click(); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-indigo-600 border border-gray-700 hover:border-indigo-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ Insert Image</button>
+                    <button id="btn-renderMath" onclick="renderMath(); closeSidebarOnMobile();" class="bg-purple-600 hover:bg-purple-500 p-2.5 rounded-lg text-sm text-left shadow-md font-bold transition-all">∑ Render Math</button>
+                    <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="insertImage(event)">
+                </div>
             </div>
         </div>
         
-        <div class="flex flex-wrap gap-2 ml-auto">
-            <button onclick="exportJSON()" class="bg-gray-200 text-gray-800 px-3 py-1.5 text-sm rounded font-bold hover:bg-gray-300 shadow">Export JSON</button>
-            <button onclick="document.getElementById('json-upload').click()" class="bg-gray-200 text-gray-800 px-3 py-1.5 text-sm rounded font-bold hover:bg-gray-300 shadow">Import JSON</button>
-            <input type="file" id="json-upload" accept=".json" class="hidden" onchange="importJSON(event)">
-            <button id="btn-dlWord" onclick="exportWord()" class="bg-blue-100 text-blue-800 px-3 py-1.5 text-sm rounded font-bold hover:bg-blue-200 shadow">DOC</button>
-            <button id="btn-dlJPG" onclick="exportJPG()" class="bg-green-100 text-green-800 px-3 py-1.5 text-sm rounded font-bold hover:bg-green-200 shadow">JPG</button>
-            <button id="btn-dlPDF" onclick="exportPDF()" class="bg-red-100 text-red-800 px-3 py-1.5 text-sm rounded font-bold hover:bg-red-200 shadow">PDF</button>
+        <div class="mt-auto flex flex-col gap-2 border-t border-gray-700 pt-4 bg-gray-900 z-10">
+            <button onclick="openLibraryModal(); closeSidebarOnMobile();" class="bg-green-600 hover:bg-green-500 p-2.5 rounded-lg text-sm font-bold shadow-md transition-all">Paper Library</button>
+            <button id="btn-clearData" onclick="resetPaper(); closeSidebarOnMobile();" class="bg-red-600 hover:bg-red-500 p-2.5 rounded-lg text-sm font-bold shadow-md transition-all">Clear All Data</button>
         </div>
-    </div>
+    </aside>
 
-    <!-- A4 Paper Container -->
-    <div class="a4-wrapper flex-grow overflow-auto p-4 md:p-8">
-        <div id="paper" class="a4-paper relative">
-            <div id="paper-content">
-                <div class="text-center font-bold text-xl uppercase" contenteditable="true">NOBLE INSTITUTE OF COMPUTER SCIENCE, DABHOI</div>
+    <!-- Main Workspace -->
+    <main class="flex-grow flex flex-col relative h-full overflow-hidden w-full">
+        <!-- Top Toolbar (Horizontally Scrollable on Mobile) -->
+        <div class="export-bar bg-white shadow-sm px-4 py-3 flex items-center justify-between z-10 border-b overflow-x-auto no-scrollbar gap-4 whitespace-nowrap flex-shrink-0">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleDarkMode()" class="text-sm border border-gray-300 p-1.5 px-3 rounded-lg hover:bg-gray-100 bg-white font-medium shadow-sm transition-colors" title="Toggle Dark Mode">🌓 Mode</button>
                 
-                <div class="flex justify-between font-bold mt-3">
-                    <div contenteditable="true">F.Y.B.C.A. SEM-I</div>
-                    <div contenteditable="true">INTERNAL EXAM-October-2025</div>
+                <div class="flex items-center gap-1.5 border-l-2 pl-4 border-gray-200">
+                    <button class="format-btn" onclick="formatText('bold')" title="Bold"><b>B</b></button>
+                    <button class="format-btn" onclick="formatText('italic')" title="Italic"><i class="font-serif">I</i></button>
+                    <button class="format-btn" onclick="formatText('underline')" title="Underline"><u>U</u></button>
                 </div>
-                <div class="flex justify-between font-bold mt-1">
-                    <div contenteditable="true">SUBJECT CODE:-</div>
-                    <div contenteditable="true">Date: 1-10-2026</div>
-                </div>
-                <div class="flex justify-between font-bold mt-1">
-                    <div contenteditable="true">SUBJECT:- COMPUTER FUNDAMENTAL</div>
-                    <div contenteditable="true">TIME:- 1 HOUR</div>
-                </div>
-                <div class="text-right font-bold mt-1" contenteditable="true">Marks: 25</div>
-                <hr class="border-black my-3 border-t-2">
                 
-                <!-- Questions Container -->
-                <div id="questions-container" class="flex flex-col gap-3">
-                    <div class="question-block avoid-break relative group" data-type="main">
-                        <div class="flex justify-between font-bold mt-2">
-                            <div class="flex flex-grow">
-                                <div class="q-main-num mr-2">Q-1)</div>
-                                <div class="flex-grow" contenteditable="true">Answer the following questions.</div>
+                <div class="flex items-center gap-1.5 border-l-2 pl-4 border-gray-200">
+                    <button class="format-btn" onclick="formatText('justifyLeft')" title="Align Left">L</button>
+                    <button class="format-btn" onclick="formatText('justifyCenter')" title="Align Center">C</button>
+                    <button class="format-btn" onclick="formatText('justifyRight')" title="Align Right">R</button>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 border-l-2 pl-4 border-gray-200">
+                <button onclick="exportJSON()" class="bg-gray-100 text-gray-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-gray-200 shadow-sm border border-gray-200 transition-colors">JSON Out</button>
+                <button onclick="document.getElementById('json-upload').click()" class="bg-gray-100 text-gray-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-gray-200 shadow-sm border border-gray-200 transition-colors">JSON In</button>
+                <input type="file" id="json-upload" accept=".json" class="hidden" onchange="importJSON(event)">
+                <button id="btn-dlWord" onclick="exportWord()" class="bg-blue-50 text-blue-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-blue-100 shadow-sm border border-blue-200 transition-colors">DOC</button>
+                <button id="btn-dlJPG" onclick="exportJPG()" class="bg-green-50 text-green-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-green-100 shadow-sm border border-green-200 transition-colors">JPG</button>
+                <button id="btn-dlPDF" onclick="exportPDF()" class="bg-red-50 text-red-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-red-100 shadow-sm border border-red-200 transition-colors">PDF</button>
+            </div>
+        </div>
+
+        <!-- A4 Paper Container -->
+        <div class="a4-wrapper flex-grow overflow-auto p-3 md:p-8 bg-gray-200">
+            <div id="paper" class="a4-paper relative">
+                <div id="paper-content">
+                    <div class="text-center font-bold text-xl uppercase" contenteditable="true">NOBLE INSTITUTE OF COMPUTER SCIENCE, DABHOI</div>
+                    
+                    <div class="flex flex-col md:flex-row md:justify-between font-bold mt-3 gap-1 md:gap-0">
+                        <div contenteditable="true">F.Y.B.C.A. SEM-I</div>
+                        <div contenteditable="true">INTERNAL EXAM-October-2025</div>
+                    </div>
+                    <div class="flex flex-col md:flex-row md:justify-between font-bold mt-1 gap-1 md:gap-0">
+                        <div contenteditable="true">SUBJECT CODE:-</div>
+                        <div contenteditable="true">Date: 1-10-2026</div>
+                    </div>
+                    <div class="flex flex-col md:flex-row md:justify-between font-bold mt-1 gap-1 md:gap-0">
+                        <div contenteditable="true">SUBJECT:- COMPUTER FUNDAMENTAL</div>
+                        <div contenteditable="true">TIME:- 1 HOUR</div>
+                    </div>
+                    <div class="text-left md:text-right font-bold mt-1" contenteditable="true">Marks: 25</div>
+                    <hr class="border-black my-4 border-t-2">
+                    
+                    <!-- Questions Container -->
+                    <div id="questions-container" class="flex flex-col gap-4">
+                        <div class="question-block avoid-break relative group" data-type="main">
+                            <div class="flex justify-between font-bold mt-2">
+                                <div class="flex flex-grow">
+                                    <div class="q-main-num mr-2">Q-1)</div>
+                                    <div class="flex-grow" contenteditable="true">Answer the following questions.</div>
+                                </div>
+                                <div contenteditable="true" class="ml-2">10</div>
                             </div>
-                            <div contenteditable="true" class="ml-2">10</div>
-                        </div>
-                        <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28 text-black">
-                            <div class="drag-handle text-center bg-gray-200 hover:bg-gray-300 font-bold p-1 mb-1 rounded text-gray-700">≡ Drag</div>
-                            <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ Sub Q</button>
-                            <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1 border-t mt-1 font-bold">Delete</button>
+                            <!-- Responsive Action Menu -->
+                            <div class="action-menu no-print absolute md:-right-6 md:top-0 flex-col md:flex-col gap-1 bg-white border shadow-lg rounded-lg p-1.5 z-10 text-xs w-auto md:w-28 text-gray-800">
+                                <div class="drag-handle text-center bg-gray-100 hover:bg-gray-200 font-bold p-1.5 mb-1 rounded text-gray-600 transition-colors">≡ Drag</div>
+                                <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1.5 rounded transition-colors whitespace-nowrap">+ Sub Q</button>
+                                <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1.5 rounded border-t md:border-t-0 mt-1 md:mt-0 font-bold transition-colors whitespace-nowrap">Delete</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 
 <!-- Custom Table Generator Modal -->
-<div id="table-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
-    <div class="bg-white p-6 rounded-lg shadow-xl w-80 text-black">
-        <h3 class="font-bold text-lg border-b pb-2 mb-4">Create Custom Table</h3>
+<div id="table-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm transition-opacity">
+    <div class="bg-white p-6 rounded-xl shadow-2xl w-[90%] max-w-sm text-gray-800 transform scale-100 transition-transform">
+        <h3 class="font-bold text-xl border-b pb-3 mb-4">Create Custom Table</h3>
         
         <div class="flex gap-4 mb-4">
             <div class="flex-1">
                 <label class="text-sm font-bold text-gray-600 block mb-1">Rows</label>
-                <input type="number" id="tbl-rows" value="3" min="1" max="20" class="w-full border p-2 rounded text-center outline-blue-500">
+                <input type="number" id="tbl-rows" value="3" min="1" max="20" class="w-full border border-gray-300 p-2.5 rounded-lg text-center focus:ring-2 focus:ring-blue-500 outline-none transition-all">
             </div>
             <div class="flex-1">
                 <label class="text-sm font-bold text-gray-600 block mb-1">Columns</label>
-                <input type="number" id="tbl-cols" value="3" min="1" max="10" class="w-full border p-2 rounded text-center outline-blue-500">
+                <input type="number" id="tbl-cols" value="3" min="1" max="10" class="w-full border border-gray-300 p-2.5 rounded-lg text-center focus:ring-2 focus:ring-blue-500 outline-none transition-all">
             </div>
         </div>
         
-        <div class="mb-5 flex items-center gap-2 bg-gray-50 p-2 rounded border">
-            <input type="checkbox" id="tbl-header" checked class="w-4 h-4 text-blue-600">
-            <label for="tbl-header" class="text-sm font-bold cursor-pointer">Include Heading Row?</label>
+        <div class="mb-6 flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <input type="checkbox" id="tbl-header" checked class="w-5 h-5 text-blue-600 rounded">
+            <label for="tbl-header" class="text-sm font-bold cursor-pointer select-none">Include Heading Row?</label>
         </div>
         
-        <div class="flex justify-between border-t pt-4">
-            <button onclick="generateCustomTable()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded text-sm font-bold shadow">Create</button>
-            <button onclick="closeTableModal()" class="bg-gray-300 hover:bg-gray-400 px-5 py-2 rounded text-sm font-bold shadow text-gray-800">Cancel</button>
+        <div class="flex justify-between gap-3">
+            <button onclick="closeTableModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 py-2.5 rounded-lg text-sm font-bold shadow-sm text-gray-800 transition-colors">Cancel</button>
+            <button onclick="generateCustomTable()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">Create</button>
         </div>
     </div>
 </div>
 
 <!-- Paper Library Modal -->
-<div id="library-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
-    <div class="bg-white p-6 rounded-lg shadow-xl w-96 text-black">
-        <h3 class="font-bold text-lg border-b pb-2 mb-4">SiddhiPatra Library</h3>
-        <div id="library-list" class="max-h-60 overflow-y-auto mb-4 flex flex-col gap-2"></div>
-        <div class="border-t pt-4">
-            <input type="text" id="save-paper-name" placeholder="Enter Paper Name..." class="w-full border p-2 rounded mb-2 text-sm outline-blue-500">
-            <div class="flex justify-between">
-                <button onclick="saveToLibrary()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-bold shadow">Save</button>
-                <button onclick="closeLibraryModal()" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded text-sm font-bold shadow">Close</button>
+<div id="library-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm transition-opacity">
+    <div class="bg-white p-6 rounded-xl shadow-2xl w-[90%] max-w-md text-gray-800">
+        <h3 class="font-bold text-xl border-b pb-3 mb-4">SiddhiPatra Library</h3>
+        <div id="library-list" class="max-h-60 overflow-y-auto mb-5 flex flex-col gap-3 pr-2"></div>
+        <div class="border-t border-gray-200 pt-4">
+            <input type="text" id="save-paper-name" placeholder="Enter Paper Name..." class="w-full border border-gray-300 p-3 rounded-lg mb-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+            <div class="flex justify-between gap-3">
+                <button onclick="closeLibraryModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 py-2.5 rounded-lg text-sm font-bold shadow-sm text-gray-800 transition-colors">Close</button>
+                <button onclick="saveToLibrary()" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">Save Paper</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // --- Mobile Sidebar Toggle ---
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+
+    function closeSidebarOnMobile() {
+        if(window.innerWidth < 768) { toggleSidebar(); }
+    }
+
     // --- Translations Dictionary ---
     const i18n = {
         en: {
-            tools: "Basic Tools", lang: "Lang:", addSpace: "+ Blank Space",
+            tools: "Basic Tools", lang: "Language:", addSpace: "+ Blank Space",
             addMain: "+ Main Question", addSub: "+ Sub Question",
             addMCQ: "+ MCQ Block", addOR: "+ OR Separator", addImage: "+ Insert Image",
             addTable: "+ Data Table", renderMath: "∑ Render Math",
@@ -300,9 +356,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 
     window.onload = () => {
         const savedDraft = localStorage.getItem('examPaperDraft');
-        if (savedDraft) { 
-            document.getElementById('paper-content').innerHTML = savedDraft; 
-        }
+        if (savedDraft) { document.getElementById('paper-content').innerHTML = savedDraft; }
         updateNumbering();
         
         const container = document.getElementById('questions-container');
@@ -322,8 +376,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 
     // --- Auto-Numbering Engine ---
     function updateNumbering() {
-        let mainIndex = 0; 
-        let subIndex = 0;
+        let mainIndex = 0; let subIndex = 0;
         const blocks = document.querySelectorAll('.question-block');
         blocks.forEach(block => {
             const type = block.getAttribute('data-type');
@@ -346,7 +399,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         currentInsertContext = btnContext;
         document.getElementById('table-modal').classList.remove('hidden');
     }
-    
     function closeTableModal() {
         document.getElementById('table-modal').classList.add('hidden');
         currentInsertContext = null;
@@ -362,41 +414,32 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         
         if (hasHeader) {
             tableHTML += `<thead class="bg-gray-200"><tr>`;
-            for(let c=0; c < cols; c++) {
-                tableHTML += `<th class="border border-black p-2" contenteditable="true">Heading ${c+1}</th>`;
-            }
+            for(let c=0; c < cols; c++) { tableHTML += `<th class="border border-black p-2" contenteditable="true">Heading ${c+1}</th>`; }
             tableHTML += `</tr></thead>`;
         }
         
         tableHTML += `<tbody>`;
         for(let r=0; r < rows; r++) {
             tableHTML += `<tr>`;
-            for(let c=0; c < cols; c++) {
-                tableHTML += `<td class="border border-black p-2" contenteditable="true">Data</td>`;
-            }
+            for(let c=0; c < cols; c++) { tableHTML += `<td class="border border-black p-2" contenteditable="true">Data</td>`; }
             tableHTML += `</tr>`;
         }
         tableHTML += `</tbody></table></div>`;
         
         const fullBlockHTML = `
-        <div class="question-block avoid-break relative group mt-1" data-type="table">
+        <div class="question-block avoid-break relative group mt-2" data-type="table">
             ${tableHTML}
-            <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28 text-black">
-                <div class="drag-handle text-center bg-gray-200 hover:bg-gray-300 font-bold p-1 mb-1 rounded text-gray-700" title="Drag to reorder">≡ Drag</div>
-                <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ Sub Q</button>
-                <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1 border-t mt-1 font-bold">Delete</button>
+            <div class="action-menu no-print absolute md:-right-6 md:top-0 flex-col md:flex-col gap-1 bg-white border shadow-lg rounded-lg p-1.5 z-10 text-xs w-auto md:w-28 text-gray-800">
+                <div class="drag-handle text-center bg-gray-100 hover:bg-gray-200 font-bold p-1.5 mb-1 rounded text-gray-600">≡ Drag</div>
+                <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1.5 rounded whitespace-nowrap">+ Sub Q</button>
+                <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1.5 rounded border-t mt-1 font-bold whitespace-nowrap">Delete</button>
             </div>
         </div>`;
         
-        if (currentInsertContext) {
-            currentInsertContext.closest('.question-block').insertAdjacentHTML('afterend', fullBlockHTML);
-        } else {
-            document.getElementById('questions-container').insertAdjacentHTML('beforeend', fullBlockHTML);
-        }
+        if (currentInsertContext) { currentInsertContext.closest('.question-block').insertAdjacentHTML('afterend', fullBlockHTML);
+        } else { document.getElementById('questions-container').insertAdjacentHTML('beforeend', fullBlockHTML); }
         
-        updateNumbering(); 
-        saveData();
-        closeTableModal();
+        updateNumbering(); saveData(); closeTableModal();
     }
 
     // --- Block HTML Generator ---
@@ -405,7 +448,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         
         if (type === 'main') {
             innerHTML = `
-            <div class="flex justify-between font-bold mt-4">
+            <div class="flex justify-between font-bold mt-5">
                 <div class="flex flex-grow">
                     <div class="q-main-num mr-2">Q-X)</div>
                     <div class="flex-grow" contenteditable="true">Enter Question Title Here</div>
@@ -414,18 +457,18 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             </div>`;
         } else if (type === 'sub') {
             innerHTML = `
-            <div class="flex mt-1">
+            <div class="flex mt-2">
                 <div class="mr-2 q-sub-num">1)</div>
                 <div class="flex-grow" contenteditable="true">Enter sub-question details here...</div>
             </div>`;
         } else if (type === 'mcq') {
             innerHTML = `
-            <div class="mt-2">
+            <div class="mt-3">
                 <div class="flex">
                     <div class="mr-2 q-sub-num">1)</div>
                     <div class="flex-grow" contenteditable="true">Enter MCQ Question here:</div>
                 </div>
-                <div class="grid grid-cols-2 gap-1 mt-1 ml-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 ml-6">
                     <div contenteditable="true">a) Option A</div>
                     <div contenteditable="true">b) Option B</div>
                     <div contenteditable="true">c) Option C</div>
@@ -433,38 +476,31 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                 </div>
             </div>`;
         } else if (type === 'space') {
-            innerHTML = `<div class="blank-space-box mt-2 w-full" title="Drag bottom right corner to resize space"></div>`;
+            innerHTML = `<div class="blank-space-box mt-3 w-full" title="Drag bottom right corner to resize space"></div>`;
         } else if (type === 'or') {
-            innerHTML = `<div class="text-center font-bold my-3" contenteditable="true">OR</div>`;
+            innerHTML = `<div class="text-center font-bold my-4" contenteditable="true">OR</div>`;
         } 
 
         return `
-        <div class="question-block avoid-break relative group mt-1" data-type="${type}">
+        <div class="question-block avoid-break relative group mt-2" data-type="${type}">
             ${innerHTML}
-            <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28 text-black">
-                <div class="drag-handle text-center bg-gray-200 hover:bg-gray-300 font-bold p-1 mb-1 rounded text-gray-700" title="Drag to reorder">≡ Drag</div>
-                <span class="text-[10px] text-gray-400 font-bold text-center border-b pb-1 mb-1">Insert Below</span>
-                <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ Sub Q</button>
-                <button onclick="insertBlock('mcq', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1">+ MCQ</button>
-                <button onclick="insertBlock('space', this)" class="text-left text-indigo-600 hover:bg-indigo-50 p-1">+ Space</button>
-                <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1 border-t mt-1 font-bold">Delete</button>
+            <div class="action-menu no-print absolute md:-right-6 md:top-0 flex-col md:flex-col gap-1 bg-white border shadow-lg rounded-lg p-1.5 z-10 text-xs w-auto md:w-28 text-gray-800">
+                <div class="drag-handle text-center bg-gray-100 hover:bg-gray-200 font-bold p-1.5 mb-1 rounded text-gray-600 transition-colors">≡ Drag</div>
+                <span class="text-[10px] text-gray-400 font-bold text-center border-b pb-1 mb-1 uppercase hidden md:block">Insert Below</span>
+                <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1.5 rounded transition-colors whitespace-nowrap">+ Sub Q</button>
+                <button onclick="insertBlock('mcq', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1.5 rounded transition-colors whitespace-nowrap">+ MCQ</button>
+                <button onclick="insertBlock('space', this)" class="text-left text-indigo-600 hover:bg-indigo-50 p-1.5 rounded transition-colors whitespace-nowrap">+ Space</button>
+                <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1.5 rounded border-t mt-1 font-bold transition-colors whitespace-nowrap">Delete</button>
             </div>
         </div>`;
     }
 
     // --- Insert & Delete Blocks ---
     function insertBlock(type, btnContext = null) {
-        if (type === 'table') {
-            openTableModal(btnContext);
-            return; // Exit here, custom table builder handles HTML injection
-        }
-        
+        if (type === 'table') { openTableModal(btnContext); return; }
         const htmlString = getBlockHTML(type);
-        if (btnContext) {
-            btnContext.closest('.question-block').insertAdjacentHTML('afterend', htmlString);
-        } else {
-            document.getElementById('questions-container').insertAdjacentHTML('beforeend', htmlString);
-        }
+        if (btnContext) { btnContext.closest('.question-block').insertAdjacentHTML('afterend', htmlString);
+        } else { document.getElementById('questions-container').insertAdjacentHTML('beforeend', htmlString); }
         updateNumbering(); saveData();
     }
 
@@ -483,13 +519,13 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         
         reader.onload = function(e) {
             const imgHTML = `
-            <div class="question-block avoid-break relative group mt-3 flex justify-center" data-type="img">
-                <div class="resize-box" style="width: 60%; height: auto; min-width: 100px; min-height: 100px;" title="Drag bottom right corner to resize">
-                    <img src="${e.target.result}" style="border: 1px solid #ccc;" alt="Diagram">
+            <div class="question-block avoid-break relative group mt-4 flex justify-center" data-type="img">
+                <div class="resize-box" style="width: 80%; height: auto; min-width: 100px; min-height: 100px;" title="Drag bottom right corner to resize">
+                    <img src="${e.target.result}" style="border: 1px solid #ccc; border-radius: 4px;" alt="Diagram">
                 </div>
-                <div class="action-menu no-print absolute -right-6 top-0 flex-col gap-1 bg-white border shadow-md rounded p-1 z-10 text-xs w-28 text-black">
-                    <div class="drag-handle text-center bg-gray-200 hover:bg-gray-300 font-bold p-1 mb-1 rounded text-gray-700">≡ Drag</div>
-                    <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1 font-bold">Delete</button>
+                <div class="action-menu no-print absolute md:-right-6 md:top-0 flex-col md:flex-col gap-1 bg-white border shadow-lg rounded-lg p-1.5 z-10 text-xs w-auto md:w-28 text-gray-800">
+                    <div class="drag-handle text-center bg-gray-100 hover:bg-gray-200 font-bold p-1.5 mb-1 rounded text-gray-600">≡ Drag</div>
+                    <button onclick="deleteBlock(this)" class="text-left text-red-600 hover:bg-red-50 p-1.5 rounded font-bold whitespace-nowrap">Delete</button>
                 </div>
             </div>`;
             document.getElementById('questions-container').insertAdjacentHTML('beforeend', imgHTML);
@@ -500,19 +536,12 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     }
 
     function resetPaper() {
-        if(confirm("Clear paper? Cannot be undone.")) {
-            localStorage.removeItem('examPaperDraft'); location.reload(); 
-        }
+        if(confirm("Clear paper? Cannot be undone.")) { localStorage.removeItem('examPaperDraft'); location.reload(); }
     }
 
     // --- Multiple Paper Library System ---
-    function openLibraryModal() { 
-        document.getElementById('library-modal').classList.remove('hidden'); 
-        renderLibraryList(); 
-    }
-    function closeLibraryModal() { 
-        document.getElementById('library-modal').classList.add('hidden'); 
-    }
+    function openLibraryModal() { document.getElementById('library-modal').classList.remove('hidden'); renderLibraryList(); }
+    function closeLibraryModal() { document.getElementById('library-modal').classList.add('hidden'); }
     
     function saveToLibrary() {
         const name = document.getElementById('save-paper-name').value.trim();
@@ -529,17 +558,17 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         const listDiv = document.getElementById('library-list');
         listDiv.innerHTML = "";
         if(Object.keys(library).length === 0) { 
-            listDiv.innerHTML = '<p class="text-gray-500 text-sm">No saved papers yet.</p>'; 
+            listDiv.innerHTML = '<p class="text-gray-500 text-sm italic text-center py-4">No saved papers yet.</p>'; 
             return; 
         }
         for (const [name, content] of Object.entries(library)) {
             const item = document.createElement('div');
-            item.className = "flex justify-between items-center bg-gray-100 p-2 rounded border";
+            item.className = "flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200 shadow-sm";
             item.innerHTML = `
-            <span class="font-bold text-sm truncate w-48">${name}</span>
+            <span class="font-bold text-sm truncate w-48 text-gray-700">${name}</span>
             <div class="flex gap-2">
-                <button onclick="loadFromLibrary('${name}')" class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">Load</button>
-                <button onclick="deleteFromLibrary('${name}')" class="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Del</button>
+                <button onclick="loadFromLibrary('${name}')" class="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded hover:bg-blue-200 font-bold transition-colors">Load</button>
+                <button onclick="deleteFromLibrary('${name}')" class="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200 font-bold transition-colors">Del</button>
             </div>`;
             listDiv.appendChild(item);
         }
@@ -632,9 +661,9 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>SiddhiPatra Paper</title></head><body>";
         const footer = "</body></html>";
         
-        prepareForExport(); // Clear borders/menus for clone
+        prepareForExport(); 
         const clone = document.getElementById('paper').cloneNode(true);
-        restoreAfterExport(); // Restore immediately in UI
+        restoreAfterExport(); 
         
         const editables = clone.querySelectorAll('[contenteditable="true"]');
         editables.forEach(el => el.removeAttribute('contenteditable'));
