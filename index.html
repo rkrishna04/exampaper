@@ -122,15 +122,15 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 }
 </style>
 </head>
-<!-- h-dvh ensures the app perfectly fits the dynamic visible height on mobile browsers -->
-<body class="flex flex-col h-dvh overflow-hidden text-gray-800">
+<body class="flex flex-col h-screen md:h-screen h-[100dvh] overflow-hidden text-gray-800">
 
 <!-- Mobile Header -->
 <div class="mobile-header md:hidden flex items-center justify-between bg-gray-900 text-white p-4 shadow-md z-40 relative">
-<div class="flex items-center gap-3">
+    <div class="flex items-center gap-3">
         <img src="Siddhi_Patra.png" alt="SiddhiPatra Logo" onerror="this.style.display='none'" class="w-10 h-10 rounded-full object-cover">
         <h1 class="text-xl font-black text-blue-400 tracking-wide">SiddhiPatra</h1>
-    </div>    <button onclick="toggleSidebar()" class="p-2 rounded bg-gray-800 hover:bg-gray-700 focus:outline-none">
+    </div>    
+    <button onclick="toggleSidebar()" class="p-2 rounded bg-gray-800 hover:bg-gray-700 focus:outline-none">
         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
     </button>
 </div>
@@ -142,8 +142,9 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     <aside id="sidebar" class="sidebar absolute md:relative inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-gray-900 text-white p-5 flex flex-col gap-4 overflow-y-auto z-30 shadow-2xl md:shadow-none h-full flex-shrink-0">
         <div class="hidden md:flex items-center gap-3">
             <img src="Siddhi_Patra.png" alt="SiddhiPatra Logo" onerror="this.style.display='none'" class="w-12 h-12 rounded-full object-cover">
-        <h1 class="text-2xl font-black text-blue-400 tracking-wide hidden md:block">SiddhiPatra</h1>
+            <h1 class="text-2xl font-black text-blue-400 tracking-wide hidden md:block">SiddhiPatra</h1>
         </div>
+        
         <!-- Language Selection -->
         <div class="flex items-center justify-between bg-gray-800 p-2 rounded-lg mt-2 border border-gray-700">
             <label id="ui-lang" class="text-sm font-bold text-gray-300">Language:</label>
@@ -161,6 +162,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                     <button id="btn-addMain" onclick="insertBlock('main'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-blue-600 border border-gray-700 hover:border-blue-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ Main Question</button>
                     <button id="btn-addSub" onclick="insertBlock('sub'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-blue-600 border border-gray-700 hover:border-blue-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ Sub Question</button>
                     <button id="btn-addMCQ" onclick="insertBlock('mcq'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-blue-600 border border-gray-700 hover:border-blue-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ MCQ Block</button>
+                    <button id="btn-addText" onclick="insertBlock('text'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-blue-600 border border-gray-700 hover:border-blue-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ Text Block</button>
                     <button id="btn-addSpace" onclick="insertBlock('space'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-indigo-600 border border-gray-700 hover:border-indigo-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ Blank Space</button>
                     <button id="btn-addOR" onclick="insertBlock('or'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-gray-600 border border-gray-700 hover:border-gray-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ OR Separator</button>
                 </div>
@@ -180,7 +182,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             </div>
         </div>
         
-        <!-- pb-8 guarantees the buttons clear the physical bottom of the phone screen -->
         <div class="mt-auto flex flex-col gap-2 border-t border-gray-700 pt-4 pb-8 md:pb-0 bg-gray-900 z-10">
             <button onclick="openLibraryModal(); closeSidebarOnMobile();" class="bg-green-600 hover:bg-green-500 p-2.5 rounded-lg text-sm font-bold shadow-md transition-all">Paper Library</button>
             <button id="btn-clearData" onclick="resetPaper(); closeSidebarOnMobile();" class="bg-red-600 hover:bg-red-500 p-2.5 rounded-lg text-sm font-bold shadow-md transition-all">Clear All Data</button>
@@ -226,7 +227,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                 <div id="paper-content">
                     <div class="text-center font-bold text-xl uppercase" contenteditable="true">NOBLE INSTITUTE OF COMPUTER SCIENCE, DABHOI</div>
                     
-                    <!-- STRICT HORIZONTAL ALIGNMENT (No mobile stacking classes) -->
                     <div class="flex justify-between font-bold mt-4">
                         <div contenteditable="true">F.Y.B.C.A. SEM-I</div>
                         <div contenteditable="true">INTERNAL EXAM-October-2025</div>
@@ -242,9 +242,10 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                     <div class="text-right font-bold mt-1" contenteditable="true">Marks: 25</div>
                     <hr class="border-black my-4 border-t-2">
                     
-                    <div id="questions-container" class="flex flex-col gap-4">
-                        <div class="question-block avoid-break relative group" data-type="main">
-                            <div class="flex justify-between font-bold mt-2">
+                    <!-- Removed the global 'gap-4' to allow for dynamic block spacing -->
+                    <div id="questions-container" class="flex flex-col">
+                        <div class="question-block avoid-break relative group mt-6" data-type="main">
+                            <div class="flex justify-between font-bold">
                                 <div class="flex flex-grow">
                                     <div class="q-main-num mr-2" contenteditable="true">Q-1)</div>
                                     <div class="flex-grow" contenteditable="true">Answer the following questions.</div>
@@ -368,13 +369,13 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 
     // --- Translations Dictionary ---
     const i18n = {
-        en: { tools: "Basic Tools", lang: "Language:", addSpace: "+ Blank Space", addMain: "+ Main Question", addSub: "+ Sub Question", addMCQ: "+ MCQ Block", addOR: "+ OR Separator", addImage: "+ Insert Image", addTable: "+ Data Table", renderMath: "∑ Render Math", clearData: "Clear All Data", dlWord: "DOC", dlJPG: "JPG", dlPDF: "PDF" },
-        gu: { tools: "સાધનો", lang: "ભાષા:", addSpace: "+ ખાલી જગ્યા", addMain: "+ મુખ્ય પ્રશ્ન", addSub: "+ પેટા પ્રશ્ન", addMCQ: "+ બહુવિકલ્પી (MCQ)", addOR: "+ OR", addImage: "+ ચિત્ર ઉમેરો", addTable: "+ ડેટા ટેબલ", renderMath: "∑ ગણિત બતાવો", clearData: "બધો ડેટા ભૂંસી નાખો", dlWord: "DOC ડાઉનલોડ", dlJPG: "JPG ડાઉનલોડ", dlPDF: "PDF ડાઉનલોડ" },
-        hi: { tools: "उपकरण", lang: "भाषाः", addSpace: "+ खाली जगह", addMain: "+ मुख्य प्रश्न", addSub: "+ उप प्रश्न", addMCQ: "+ बहुविकल्पीय (MCQ)", addOR: "+ OR विभाजक", addImage: "+ छवि डालें", addTable: "+ डेटा टेबल", renderMath: "∑ गणित दिखाएं", clearData: "सभी डेटा मिटाएं", dlWord: "DOC डाउनलोड", dlJPG: "JPG डाउनलोड", dlPDF: "PDF डाउनलोड" }
+        en: { tools: "Basic Tools", lang: "Language:", addSpace: "+ Blank Space", addMain: "+ Main Question", addSub: "+ Sub Question", addMCQ: "+ MCQ Block", addText: "+ Text Block", addOR: "+ OR Separator", addImage: "+ Insert Image", addTable: "+ Data Table", renderMath: "∑ Render Math", clearData: "Clear All Data", dlWord: "DOC", dlJPG: "JPG", dlPDF: "PDF" },
+        gu: { tools: "સાધનો", lang: "ભાષા:", addSpace: "+ ખાલી જગ્યા", addMain: "+ મુખ્ય પ્રશ્ન", addSub: "+ પેટા પ્રશ્ન", addMCQ: "+ બહુવિકલ્પી (MCQ)", addText: "+ ટેક્સ્ટ બ્લોક", addOR: "+ OR", addImage: "+ ચિત્ર ઉમેરો", addTable: "+ ડેટા ટેબલ", renderMath: "∑ ગણિત બતાવો", clearData: "બધો ડેટા ભૂંસી નાખો", dlWord: "DOC ડાઉનલોડ", dlJPG: "JPG ડાઉનલોડ", dlPDF: "PDF ડાઉનલોડ" },
+        hi: { tools: "उपकरण", lang: "भाषाः", addSpace: "+ खाली जगह", addMain: "+ मुख्य प्रश्न", addSub: "+ उप प्रश्न", addMCQ: "+ बहुविकल्पीय (MCQ)", addText: "+ टेक्स्ट ब्लॉक", addOR: "+ OR विभाजक", addImage: "+ छवि डालें", addTable: "+ डेटा टेबल", renderMath: "∑ गणित दिखाएं", clearData: "सभी डेटा मिटाएं", dlWord: "DOC डाउनलोड", dlJPG: "JPG डाउनलोड", dlPDF: "PDF डाउनलोड" }
     };
     function changeLanguage() {
         const lang = document.getElementById('lang-select').value; const dict = i18n[lang];
-        document.getElementById('ui-tools').innerText = dict.tools; document.getElementById('ui-lang').innerText = dict.lang; document.getElementById('btn-addMain').innerText = dict.addMain; document.getElementById('btn-addSub').innerText = dict.addSub; document.getElementById('btn-addMCQ').innerText = dict.addMCQ; document.getElementById('btn-addSpace').innerText = dict.addSpace; document.getElementById('btn-addOR').innerText = dict.addOR; document.getElementById('btn-addImage').innerText = dict.addImage; document.getElementById('btn-addTable').innerText = dict.addTable; document.getElementById('btn-renderMath').innerText = dict.renderMath; document.getElementById('btn-clearData').innerText = dict.clearData; document.getElementById('btn-dlWord').innerText = dict.dlWord; document.getElementById('btn-dlJPG').innerText = dict.dlJPG; document.getElementById('btn-dlPDF').innerText = dict.dlPDF;
+        document.getElementById('ui-tools').innerText = dict.tools; document.getElementById('ui-lang').innerText = dict.lang; document.getElementById('btn-addMain').innerText = dict.addMain; document.getElementById('btn-addSub').innerText = dict.addSub; document.getElementById('btn-addMCQ').innerText = dict.addMCQ; document.getElementById('btn-addText').innerText = dict.addText; document.getElementById('btn-addSpace').innerText = dict.addSpace; document.getElementById('btn-addOR').innerText = dict.addOR; document.getElementById('btn-addImage').innerText = dict.addImage; document.getElementById('btn-addTable').innerText = dict.addTable; document.getElementById('btn-renderMath').innerText = dict.renderMath; document.getElementById('btn-clearData').innerText = dict.clearData; document.getElementById('btn-dlWord').innerText = dict.dlWord; document.getElementById('btn-dlJPG').innerText = dict.dlJPG; document.getElementById('btn-dlPDF').innerText = dict.dlPDF;
     }
 
     // --- Core Formatting & UX Features ---
@@ -476,7 +477,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         const cols = parseInt(document.getElementById('tbl-cols').value) || 3;
         const hasHeader = document.getElementById('tbl-header').checked;
         
-        let tableHTML = `<div class="resize-box w-full" style="height: auto; min-height: 50px;" title="Drag bottom right corner to resize"><table class="w-full border-collapse border border-black text-center mt-3 mb-3 text-sm h-full">`;
+        let tableHTML = `<div class="resize-box w-full" style="height: auto; min-height: 50px;" title="Drag bottom right corner to resize"><table class="w-full border-collapse border border-black text-center text-sm h-full">`;
         
         if (hasHeader) {
             tableHTML += `<thead class="bg-gray-200"><tr>`;
@@ -493,7 +494,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         tableHTML += `</tbody></table></div>`;
         
         const fullBlockHTML = `
-        <div class="question-block avoid-break relative group mt-2" data-type="table">
+        <div class="question-block avoid-break relative group mt-3" data-type="table">
             ${tableHTML}
             <div class="action-menu no-print text-gray-800">
                 <div class="drag-handle text-center bg-gray-100 hover:bg-gray-200 text-xs font-bold p-1.5 rounded text-gray-600 transition-colors">≡ Drag</div>
@@ -510,35 +511,41 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     // --- Block HTML Generator ---
     function getBlockHTML(type) {
         let innerHTML = "";
+        let spacingClass = "mt-3"; // Default dynamic spacing
         
         if (type === 'main') {
+            spacingClass = "mt-6"; // Give main questions a large top gap
             innerHTML = `
-            <div class="flex justify-between font-bold mt-5">
+            <div class="flex justify-between font-bold">
                 <div class="flex flex-grow"><div class="q-main-num mr-2" contenteditable="true">Q-X)</div><div class="flex-grow" contenteditable="true">Enter Question Title Here</div></div>
                 <div contenteditable="true" class="ml-2">10</div>
             </div>`;
         } else if (type === 'sub') {
             innerHTML = `
-            <div class="flex mt-2">
+            <div class="flex">
                 <div class="mr-2 q-sub-num" contenteditable="true">1)</div><div class="flex-grow" contenteditable="true">Enter sub-question details here...</div>
             </div>`;
         } else if (type === 'mcq') {
             innerHTML = `
-            <div class="mt-3">
+            <div>
                 <div class="flex"><div class="mr-2 q-sub-num" contenteditable="true">1)</div><div class="flex-grow" contenteditable="true">Enter MCQ Question here:</div></div>
                 <div class="grid grid-cols-2 gap-2 mt-2 ml-6">
                     <div contenteditable="true">a) Option A</div><div contenteditable="true">b) Option B</div>
                     <div contenteditable="true">c) Option C</div><div contenteditable="true">d) Option D</div>
                 </div>
             </div>`;
+        } else if (type === 'text') {
+            spacingClass = "mt-1"; // Extremely tight spacing to hug tables/images above
+            innerHTML = `<div class="w-full text-justify" contenteditable="true">Enter description or text here...</div>`;
         } else if (type === 'space') {
-            innerHTML = `<div class="blank-space-box mt-3 w-full" title="Drag bottom right corner to resize space"></div>`;
+            innerHTML = `<div class="blank-space-box w-full" title="Drag bottom right corner to resize space"></div>`;
         } else if (type === 'or') {
-            innerHTML = `<div class="text-center font-bold my-4" contenteditable="true">OR</div>`;
+            spacingClass = "mt-4 mb-2"; // Add breathing room around "OR"
+            innerHTML = `<div class="text-center font-bold" contenteditable="true">OR</div>`;
         } 
 
         return `
-        <div class="question-block avoid-break relative group mt-2" data-type="${type}">
+        <div class="question-block avoid-break relative group ${spacingClass}" data-type="${type}">
             ${innerHTML}
             <div class="action-menu no-print text-gray-800">
                 <div class="drag-handle text-center bg-gray-100 hover:bg-gray-200 text-xs font-bold p-1.5 rounded text-gray-600 transition-colors">≡ Drag</div>
@@ -565,13 +572,13 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         const reader = new FileReader();
         reader.onload = function(e) {
             const imgHTML = `
-            <div class="question-block avoid-break relative group mt-4 flex justify-center" data-type="img">
+            <div class="question-block avoid-break relative group mt-3 flex justify-center" data-type="img">
                 <div class="resize-box" style="width: 80%; height: auto; min-width: 100px; min-height: 100px;" title="Drag bottom right corner to resize">
                     <img src="${e.target.result}" style="border: 1px solid #ccc; border-radius: 4px;" alt="Diagram">
                 </div>
                 <div class="action-menu no-print text-gray-800">
                     <div class="drag-handle text-center bg-gray-100 hover:bg-gray-200 text-xs font-bold p-1.5 rounded text-gray-600 transition-colors">≡ Drag</div>
-                    <button onclick="deleteBlock(this)" class="text-center w-full text-xs text-red-600 hover:bg-red-50 p-1.5 rounded font-bold whitespace-nowrap">Delete</button>
+                    <button onclick="deleteBlock(this)" class="text-center w-full text-xs text-red-600 hover:bg-red-50 p-1.5 rounded font-bold transition-colors whitespace-nowrap">Delete</button>
                 </div>
             </div>`;
             document.getElementById('questions-container').insertAdjacentHTML('beforeend', imgHTML);
