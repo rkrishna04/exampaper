@@ -122,7 +122,8 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 }
 </style>
 </head>
-<body class="flex flex-col h-screen overflow-hidden text-gray-800">
+<!-- h-dvh ensures the app perfectly fits the dynamic visible height on mobile browsers -->
+<body class="flex flex-col h-dvh overflow-hidden text-gray-800">
 
 <!-- Mobile Header -->
 <div class="mobile-header md:hidden flex items-center justify-between bg-gray-900 text-white p-4 shadow-md z-40 relative">
@@ -179,10 +180,10 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             </div>
         </div>
         
-        <div class="mt-auto flex flex-col gap-2 border-t border-gray-700 pt-4 bg-gray-900 z-10">
+        <!-- pb-8 guarantees the buttons clear the physical bottom of the phone screen -->
+        <div class="mt-auto flex flex-col gap-2 border-t border-gray-700 pt-4 pb-8 md:pb-0 bg-gray-900 z-10">
             <button onclick="openLibraryModal(); closeSidebarOnMobile();" class="bg-green-600 hover:bg-green-500 p-2.5 rounded-lg text-sm font-bold shadow-md transition-all">Paper Library</button>
             <button id="btn-clearData" onclick="resetPaper(); closeSidebarOnMobile();" class="bg-red-600 hover:bg-red-500 p-2.5 rounded-lg text-sm font-bold shadow-md transition-all">Clear All Data</button>
-        </br>
         </div>
     </aside>
 
@@ -210,7 +211,9 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             </div>
             
             <div class="flex items-center gap-2 border-l-2 pl-4 border-gray-200">
-               <input type="file" id="json-upload" accept=".json" class="hidden" onchange="importJSON(event)">
+                <button onclick="exportJSON()" class="bg-gray-100 text-gray-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-gray-200 shadow-sm border border-gray-200 transition-colors">JSON Out</button>
+                <button onclick="document.getElementById('json-upload').click()" class="bg-gray-100 text-gray-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-gray-200 shadow-sm border border-gray-200 transition-colors">JSON In</button>
+                <input type="file" id="json-upload" accept=".json" class="hidden" onchange="importJSON(event)">
                 <button id="btn-dlWord" onclick="exportWord()" class="bg-blue-50 text-blue-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-blue-100 shadow-sm border border-blue-200 transition-colors">DOC</button>
                 <button id="btn-dlJPG" onclick="exportJPG()" class="bg-green-50 text-green-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-green-100 shadow-sm border border-green-200 transition-colors">JPG</button>
                 <button id="btn-dlPDF" onclick="exportPDF()" class="bg-red-50 text-red-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-red-100 shadow-sm border border-red-200 transition-colors">PDF</button>
@@ -508,7 +511,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     function getBlockHTML(type) {
         let innerHTML = "";
         
-        // Removed mobile-stacking classes (md:grid-cols-2) and hardcoded strict 2-column grid for MCQs
         if (type === 'main') {
             innerHTML = `
             <div class="flex justify-between font-bold mt-5">
