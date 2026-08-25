@@ -29,7 +29,7 @@ body.dark-mode .a4-wrapper { background-color: #374151; }
     width: 100%;
     max-width: 210mm;
     min-height: 297mm;
-    padding: 15px; /* Better for mobile */
+    padding: 15px;
     margin: 0 auto;
     background: white;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -70,7 +70,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 
 /* Hover & Touch Action Menus */
 .action-menu { display: none; }
-/* Mobile friendly: menu shows on hover OR when focused inside the block */
 .question-block:hover .action-menu,
 .question-block:focus-within .action-menu { display: flex; }
 
@@ -81,14 +80,13 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
     }
     .action-menu button { padding: 4px 8px; border-top: none; border-left: 1px solid #e5e7eb; }
-    .action-menu span { display: none; } /* Hide "Insert Below" text on mobile */
+    .action-menu span { display: none; } 
 }
 
 .drag-handle { cursor: grab; }
 .drag-handle:active { cursor: grabbing; }
 .sortable-ghost { opacity: 0.3; background: #e0e7ff; border-radius: 4px; }
 
-/* Hide scrollbar for horizontal scrolling menus */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -106,16 +104,14 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 </head>
 <body class="flex flex-col h-screen overflow-hidden text-gray-800">
 
-<!-- Mobile Header (Visible only on small screens) -->
+<!-- Mobile Header -->
 <div class="mobile-header md:hidden flex items-center justify-between bg-gray-900 text-white p-4 shadow-md z-40 relative">
     <h1 class="text-xl font-black text-blue-400 tracking-wide">SiddhiPatra</h1>
     <button onclick="toggleSidebar()" class="p-2 rounded bg-gray-800 hover:bg-gray-700 focus:outline-none">
-        <!-- Hamburger Icon -->
         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
     </button>
 </div>
 
-<!-- Mobile Sidebar Overlay -->
 <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-20 md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
 <div class="flex flex-1 overflow-hidden relative">
@@ -150,7 +146,12 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                 <div class="flex flex-col gap-2">
                     <button id="btn-addTable" onclick="insertBlock('table'); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-indigo-600 border border-gray-700 hover:border-indigo-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ Data Table</button>
                     <button id="btn-addImage" onclick="document.getElementById('image-upload').click(); closeSidebarOnMobile();" class="bg-gray-800 hover:bg-indigo-600 border border-gray-700 hover:border-indigo-500 p-2.5 rounded-lg text-sm text-left shadow-sm transition-all">+ Insert Image</button>
-                    <button id="btn-renderMath" onclick="renderMath(); closeSidebarOnMobile();" class="bg-purple-600 hover:bg-purple-500 p-2.5 rounded-lg text-sm text-left shadow-md font-bold transition-all">∑ Render Math</button>
+                    
+                    <!-- NEW MATH KEYBOARD BUTTON -->
+                    <button onclick="openMathModal(); closeSidebarOnMobile();" class="bg-blue-900 hover:bg-blue-700 border border-blue-500 p-2.5 rounded-lg text-sm text-left shadow-md font-bold transition-all mt-1">🧮 Math Keyboard</button>
+                    
+                    <button id="btn-renderMath" onclick="renderMath(); closeSidebarOnMobile();" class="bg-purple-600 hover:bg-purple-500 p-2.5 rounded-lg text-sm text-left shadow-md font-bold transition-all mt-1">∑ Render Math</button>
+                    
                     <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="insertImage(event)">
                 </div>
             </div>
@@ -164,7 +165,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 
     <!-- Main Workspace -->
     <main class="flex-grow flex flex-col relative h-full overflow-hidden w-full">
-        <!-- Top Toolbar (Horizontally Scrollable on Mobile) -->
+        <!-- Top Toolbar -->
         <div class="export-bar bg-white shadow-sm px-4 py-3 flex items-center justify-between z-10 border-b overflow-x-auto no-scrollbar gap-4 whitespace-nowrap flex-shrink-0">
             <div class="flex items-center gap-4">
                 <button onclick="toggleDarkMode()" class="text-sm border border-gray-300 p-1.5 px-3 rounded-lg hover:bg-gray-100 bg-white font-medium shadow-sm transition-colors" title="Toggle Dark Mode">🌓 Mode</button>
@@ -213,7 +214,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                     <div class="text-left md:text-right font-bold mt-1" contenteditable="true">Marks: 25</div>
                     <hr class="border-black my-4 border-t-2">
                     
-                    <!-- Questions Container -->
                     <div id="questions-container" class="flex flex-col gap-4">
                         <div class="question-block avoid-break relative group" data-type="main">
                             <div class="flex justify-between font-bold mt-2">
@@ -223,7 +223,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                                 </div>
                                 <div contenteditable="true" class="ml-2">10</div>
                             </div>
-                            <!-- Responsive Action Menu -->
                             <div class="action-menu no-print absolute md:-right-6 md:top-0 flex-col md:flex-col gap-1 bg-white border shadow-lg rounded-lg p-1.5 z-10 text-xs w-auto md:w-28 text-gray-800">
                                 <div class="drag-handle text-center bg-gray-100 hover:bg-gray-200 font-bold p-1.5 mb-1 rounded text-gray-600 transition-colors">≡ Drag</div>
                                 <button onclick="insertBlock('sub', this)" class="text-left text-blue-600 hover:bg-blue-50 p-1.5 rounded transition-colors whitespace-nowrap">+ Sub Q</button>
@@ -237,11 +236,66 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     </main>
 </div>
 
+<!-- ================= NEW MATH SYMBOL KEYBOARD MODAL ================= -->
+<div id="math-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm transition-opacity">
+    <div class="bg-white p-6 rounded-xl shadow-2xl w-[95%] max-w-2xl text-gray-800">
+        <h3 class="font-bold text-xl border-b pb-3 mb-2 flex justify-between items-center">
+            <span>🧮 Math Symbol Keyboard</span>
+            <button onclick="closeMathModal()" class="text-gray-400 hover:text-red-500 text-2xl leading-none">&times;</button>
+        </h3>
+        <p class="text-xs text-gray-500 mb-4 bg-blue-50 p-2 rounded border border-blue-100">
+            <strong>How to use:</strong> Click anywhere inside your exam paper where you want the math to go, then click a button below to insert it.
+        </p>
+        
+        <div class="space-y-5 max-h-[60vh] overflow-y-auto pr-2">
+            <!-- Basic Operations -->
+            <div>
+                <h4 class="text-sm font-bold text-gray-700 mb-2 border-b border-gray-100 pb-1">Basic & Fractions</h4>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="insertMath('\\frac{x}{y}')" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 font-mono text-sm shadow-sm transition-colors">Fraction (x/y)</button>
+                    <button onclick="insertMath('x^2')" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 font-mono text-sm shadow-sm transition-colors">Power (x²)</button>
+                    <button onclick="insertMath('x_i')" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 font-mono text-sm shadow-sm transition-colors">Subscript (xᵢ)</button>
+                    <button onclick="insertMath('\\sqrt{x}')" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 font-mono text-sm shadow-sm transition-colors">Square Root</button>
+                    <button onclick="insertMath('\\pm')" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 font-mono text-sm shadow-sm transition-colors">± Plus/Minus</button>
+                </div>
+            </div>
+
+            <!-- Greek Letters -->
+            <div>
+                <h4 class="text-sm font-bold text-gray-700 mb-2 border-b border-gray-100 pb-1">Greek Letters</h4>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="insertMath('\\alpha')" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 font-mono text-sm shadow-sm">α</button>
+                    <button onclick="insertMath('\\beta')" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 font-mono text-sm shadow-sm">β</button>
+                    <button onclick="insertMath('\\Omega')" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 font-mono text-sm shadow-sm">Ω</button>
+                    <button onclick="insertMath('\\mu')" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 font-mono text-sm shadow-sm">μ</button>
+                    <button onclick="insertMath('\\theta')" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 font-mono text-sm shadow-sm">θ</button>
+                    <button onclick="insertMath('\\pi')" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 font-mono text-sm shadow-sm">π</button>
+                </div>
+            </div>
+            
+            <!-- Advanced Stats / Chemistry Pre-sets -->
+            <div>
+                <h4 class="text-sm font-bold text-gray-700 mb-2 border-b border-gray-100 pb-1">Advanced Pre-sets (From Images)</h4>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="insertMath('\\sum_{i=1}^N')" class="px-3 py-2 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 rounded border border-indigo-200 font-mono text-sm shadow-sm font-bold">∑ Summation</button>
+                    <button onclick="insertMath('\\equiv')" class="px-3 py-2 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 rounded border border-indigo-200 font-mono text-sm shadow-sm font-bold">≡ Equivalent</button>
+                    <button onclick="insertMath('A_0 + A_1Z + A_2Z^2 + A_3Z^3 = 0')" class="px-3 py-2 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 rounded border border-indigo-200 font-mono text-sm shadow-sm font-bold">Polynomial Eq</button>
+                    <button onclick="insertMath('Z \\equiv \\frac{pv}{RT}')" class="px-3 py-2 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 rounded border border-indigo-200 font-mono text-sm shadow-sm font-bold">State Eq (Z)</button>
+                    <button onclick="insertMath('p = \\frac{RT}{v-b} - \\frac{a}{[v,b]}')" class="px-3 py-2 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 rounded border border-indigo-200 font-mono text-sm shadow-sm font-bold">State Eq (p)</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="border-t pt-4 mt-4 flex justify-end">
+            <button onclick="closeMathModal()" class="bg-gray-800 hover:bg-gray-900 py-2 px-6 rounded-lg text-sm font-bold text-white transition-colors">Done</button>
+        </div>
+    </div>
+</div>
+
 <!-- Custom Table Generator Modal -->
 <div id="table-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm transition-opacity">
     <div class="bg-white p-6 rounded-xl shadow-2xl w-[90%] max-w-sm text-gray-800 transform scale-100 transition-transform">
         <h3 class="font-bold text-xl border-b pb-3 mb-4">Create Custom Table</h3>
-        
         <div class="flex gap-4 mb-4">
             <div class="flex-1">
                 <label class="text-sm font-bold text-gray-600 block mb-1">Rows</label>
@@ -252,12 +306,10 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                 <input type="number" id="tbl-cols" value="3" min="1" max="10" class="w-full border border-gray-300 p-2.5 rounded-lg text-center focus:ring-2 focus:ring-blue-500 outline-none transition-all">
             </div>
         </div>
-        
         <div class="mb-6 flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
             <input type="checkbox" id="tbl-header" checked class="w-5 h-5 text-blue-600 rounded">
             <label for="tbl-header" class="text-sm font-bold cursor-pointer select-none">Include Heading Row?</label>
         </div>
-        
         <div class="flex justify-between gap-3">
             <button onclick="closeTableModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 py-2.5 rounded-lg text-sm font-bold shadow-sm text-gray-800 transition-colors">Cancel</button>
             <button onclick="generateCustomTable()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">Create</button>
@@ -288,53 +340,17 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         sidebar.classList.toggle('-translate-x-full');
         overlay.classList.toggle('hidden');
     }
-
-    function closeSidebarOnMobile() {
-        if(window.innerWidth < 768) { toggleSidebar(); }
-    }
+    function closeSidebarOnMobile() { if(window.innerWidth < 768) { toggleSidebar(); } }
 
     // --- Translations Dictionary ---
     const i18n = {
-        en: {
-            tools: "Basic Tools", lang: "Language:", addSpace: "+ Blank Space",
-            addMain: "+ Main Question", addSub: "+ Sub Question",
-            addMCQ: "+ MCQ Block", addOR: "+ OR Separator", addImage: "+ Insert Image",
-            addTable: "+ Data Table", renderMath: "∑ Render Math",
-            clearData: "Clear All Data", dlWord: "DOC", dlJPG: "JPG", dlPDF: "PDF"
-        },
-        gu: {
-            tools: "સાધનો", lang: "ભાષા:", addSpace: "+ ખાલી જગ્યા",
-            addMain: "+ મુખ્ય પ્રશ્ન", addSub: "+ પેટા પ્રશ્ન",
-            addMCQ: "+ બહુવિકલ્પી (MCQ)", addOR: "+ OR", addImage: "+ ચિત્ર ઉમેરો",
-            addTable: "+ ડેટા ટેબલ", renderMath: "∑ ગણિત બતાવો",
-            clearData: "બધો ડેટા ભૂંસી નાખો", dlWord: "DOC ડાઉનલોડ", dlJPG: "JPG ડાઉનલોડ", dlPDF: "PDF ડાઉનલોડ"
-        },
-        hi: {
-            tools: "उपकरण", lang: "भाषाः", addSpace: "+ खाली जगह",
-            addMain: "+ मुख्य प्रश्न", addSub: "+ उप प्रश्न",
-            addMCQ: "+ बहुविकल्पीय (MCQ)", addOR: "+ OR विभाजक", addImage: "+ छवि डालें",
-            addTable: "+ डेटा टेबल", renderMath: "∑ गणित दिखाएं",
-            clearData: "सभी डेटा मिटाएं", dlWord: "DOC डाउनलोड", dlJPG: "JPG डाउनलोड", dlPDF: "PDF डाउनलोड"
-        }
+        en: { tools: "Basic Tools", lang: "Language:", addSpace: "+ Blank Space", addMain: "+ Main Question", addSub: "+ Sub Question", addMCQ: "+ MCQ Block", addOR: "+ OR Separator", addImage: "+ Insert Image", addTable: "+ Data Table", renderMath: "∑ Render Math", clearData: "Clear All Data", dlWord: "DOC", dlJPG: "JPG", dlPDF: "PDF" },
+        gu: { tools: "સાધનો", lang: "ભાષા:", addSpace: "+ ખાલી જગ્યા", addMain: "+ મુખ્ય પ્રશ્ન", addSub: "+ પેટા પ્રશ્ન", addMCQ: "+ બહુવિકલ્પી (MCQ)", addOR: "+ OR", addImage: "+ ચિત્ર ઉમેરો", addTable: "+ ડેટા ટેબલ", renderMath: "∑ ગણિત બતાવો", clearData: "બધો ડેટા ભૂંસી નાખો", dlWord: "DOC ડાઉનલોડ", dlJPG: "JPG ડાઉનલોડ", dlPDF: "PDF ડાઉનલોડ" },
+        hi: { tools: "उपकरण", lang: "भाषाः", addSpace: "+ खाली जगह", addMain: "+ मुख्य प्रश्न", addSub: "+ उप प्रश्न", addMCQ: "+ बहुविकल्पीय (MCQ)", addOR: "+ OR विभाजक", addImage: "+ छवि डालें", addTable: "+ डेटा टेबल", renderMath: "∑ गणित दिखाएं", clearData: "सभी डेटा मिटाएं", dlWord: "DOC डाउनलोड", dlJPG: "JPG डाउनलोड", dlPDF: "PDF डाउनलोड" }
     };
-
     function changeLanguage() {
-        const lang = document.getElementById('lang-select').value;
-        const dict = i18n[lang];
-        document.getElementById('ui-tools').innerText = dict.tools;
-        document.getElementById('ui-lang').innerText = dict.lang;
-        document.getElementById('btn-addMain').innerText = dict.addMain;
-        document.getElementById('btn-addSub').innerText = dict.addSub;
-        document.getElementById('btn-addMCQ').innerText = dict.addMCQ;
-        document.getElementById('btn-addSpace').innerText = dict.addSpace;
-        document.getElementById('btn-addOR').innerText = dict.addOR;
-        document.getElementById('btn-addImage').innerText = dict.addImage;
-        document.getElementById('btn-addTable').innerText = dict.addTable;
-        document.getElementById('btn-renderMath').innerText = dict.renderMath;
-        document.getElementById('btn-clearData').innerText = dict.clearData;
-        document.getElementById('btn-dlWord').innerText = dict.dlWord;
-        document.getElementById('btn-dlJPG').innerText = dict.dlJPG;
-        document.getElementById('btn-dlPDF').innerText = dict.dlPDF;
+        const lang = document.getElementById('lang-select').value; const dict = i18n[lang];
+        document.getElementById('ui-tools').innerText = dict.tools; document.getElementById('ui-lang').innerText = dict.lang; document.getElementById('btn-addMain').innerText = dict.addMain; document.getElementById('btn-addSub').innerText = dict.addSub; document.getElementById('btn-addMCQ').innerText = dict.addMCQ; document.getElementById('btn-addSpace').innerText = dict.addSpace; document.getElementById('btn-addOR').innerText = dict.addOR; document.getElementById('btn-addImage').innerText = dict.addImage; document.getElementById('btn-addTable').innerText = dict.addTable; document.getElementById('btn-renderMath').innerText = dict.renderMath; document.getElementById('btn-clearData').innerText = dict.clearData; document.getElementById('btn-dlWord').innerText = dict.dlWord; document.getElementById('btn-dlJPG').innerText = dict.dlJPG; document.getElementById('btn-dlPDF').innerText = dict.dlPDF;
     }
 
     // --- Core Formatting & UX Features ---
@@ -343,11 +359,43 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 
     // --- MathJax Render Engine ---
     function renderMath() {
-        if (typeof MathJax !== 'undefined') {
-            MathJax.typesetPromise([document.getElementById('paper')]).then(() => {
-                saveData();
-            });
+        if (typeof MathJax !== 'undefined') { MathJax.typesetPromise([document.getElementById('paper')]).then(() => { saveData(); }); }
+    }
+
+    // --- MATH KEYBOARD LOGIC (Cursor Tracking) ---
+    let savedSelection = null;
+    
+    // Continuously monitor where the teacher's text cursor is inside the paper
+    document.addEventListener('selectionchange', () => {
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            if (document.getElementById('paper').contains(range.commonAncestorContainer)) {
+                savedSelection = range;
+            }
         }
+    });
+
+    function openMathModal() { document.getElementById('math-modal').classList.remove('hidden'); }
+    function closeMathModal() { document.getElementById('math-modal').classList.add('hidden'); }
+
+    function insertMath(latexStr) {
+        if (!savedSelection) {
+            alert("Please click inside a question box on the paper before selecting a math symbol.");
+            closeMathModal();
+            return;
+        }
+        
+        // Restore cursor position
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedSelection);
+        
+        // Format for inline math and insert
+        const textToInsert = " \\( " + latexStr + " \\) ";
+        document.execCommand('insertText', false, textToInsert);
+        
+        saveData();
     }
 
     // --- Auto-Save & Initialization ---
@@ -361,18 +409,10 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         
         const container = document.getElementById('questions-container');
         if(container && typeof Sortable !== 'undefined') {
-            new Sortable(container, {
-                handle: '.drag-handle',
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                onEnd: function () { updateNumbering(); saveData(); }
-            });
+            new Sortable(container, { handle: '.drag-handle', animation: 150, ghostClass: 'sortable-ghost', onEnd: function () { updateNumbering(); saveData(); } });
         }
     };
-
-    function saveData() { 
-        localStorage.setItem('examPaperDraft', document.getElementById('paper-content').innerHTML); 
-    }
+    function saveData() { localStorage.setItem('examPaperDraft', document.getElementById('paper-content').innerHTML); }
 
     // --- Auto-Numbering Engine ---
     function updateNumbering() {
@@ -394,23 +434,15 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 
     // --- Custom Table Modals & Logic ---
     let currentInsertContext = null;
-    
-    function openTableModal(btnContext = null) {
-        currentInsertContext = btnContext;
-        document.getElementById('table-modal').classList.remove('hidden');
-    }
-    function closeTableModal() {
-        document.getElementById('table-modal').classList.add('hidden');
-        currentInsertContext = null;
-    }
+    function openTableModal(btnContext = null) { currentInsertContext = btnContext; document.getElementById('table-modal').classList.remove('hidden'); }
+    function closeTableModal() { document.getElementById('table-modal').classList.add('hidden'); currentInsertContext = null; }
 
     function generateCustomTable() {
         const rows = parseInt(document.getElementById('tbl-rows').value) || 3;
         const cols = parseInt(document.getElementById('tbl-cols').value) || 3;
         const hasHeader = document.getElementById('tbl-header').checked;
         
-        let tableHTML = `<div class="resize-box w-full" style="height: auto; min-height: 50px;" title="Drag bottom right corner to resize">
-            <table class="w-full border-collapse border border-black text-center mt-3 mb-3 text-sm h-full">`;
+        let tableHTML = `<div class="resize-box w-full" style="height: auto; min-height: 50px;" title="Drag bottom right corner to resize"><table class="w-full border-collapse border border-black text-center mt-3 mb-3 text-sm h-full">`;
         
         if (hasHeader) {
             tableHTML += `<thead class="bg-gray-200"><tr>`;
@@ -445,34 +477,24 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     // --- Block HTML Generator ---
     function getBlockHTML(type) {
         let innerHTML = "";
-        
         if (type === 'main') {
             innerHTML = `
             <div class="flex justify-between font-bold mt-5">
-                <div class="flex flex-grow">
-                    <div class="q-main-num mr-2">Q-X)</div>
-                    <div class="flex-grow" contenteditable="true">Enter Question Title Here</div>
-                </div>
+                <div class="flex flex-grow"><div class="q-main-num mr-2">Q-X)</div><div class="flex-grow" contenteditable="true">Enter Question Title Here</div></div>
                 <div contenteditable="true" class="ml-2">10</div>
             </div>`;
         } else if (type === 'sub') {
             innerHTML = `
             <div class="flex mt-2">
-                <div class="mr-2 q-sub-num">1)</div>
-                <div class="flex-grow" contenteditable="true">Enter sub-question details here...</div>
+                <div class="mr-2 q-sub-num">1)</div><div class="flex-grow" contenteditable="true">Enter sub-question details here...</div>
             </div>`;
         } else if (type === 'mcq') {
             innerHTML = `
             <div class="mt-3">
-                <div class="flex">
-                    <div class="mr-2 q-sub-num">1)</div>
-                    <div class="flex-grow" contenteditable="true">Enter MCQ Question here:</div>
-                </div>
+                <div class="flex"><div class="mr-2 q-sub-num">1)</div><div class="flex-grow" contenteditable="true">Enter MCQ Question here:</div></div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 ml-6">
-                    <div contenteditable="true">a) Option A</div>
-                    <div contenteditable="true">b) Option B</div>
-                    <div contenteditable="true">c) Option C</div>
-                    <div contenteditable="true">d) Option D</div>
+                    <div contenteditable="true">a) Option A</div><div contenteditable="true">b) Option B</div>
+                    <div contenteditable="true">c) Option C</div><div contenteditable="true">d) Option D</div>
                 </div>
             </div>`;
         } else if (type === 'space') {
@@ -503,20 +525,14 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         } else { document.getElementById('questions-container').insertAdjacentHTML('beforeend', htmlString); }
         updateNumbering(); saveData();
     }
-
     function deleteBlock(btnContext) {
-        if(confirm("Delete this section?")) {
-            btnContext.closest('.question-block').remove();
-            updateNumbering(); saveData();
-        }
+        if(confirm("Delete this section?")) { btnContext.closest('.question-block').remove(); updateNumbering(); saveData(); }
     }
 
     // --- Insert Image (With Resizing support) ---
     function insertImage(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+        const file = event.target.files[0]; if (!file) return;
         const reader = new FileReader();
-        
         reader.onload = function(e) {
             const imgHTML = `
             <div class="question-block avoid-break relative group mt-4 flex justify-center" data-type="img">
@@ -531,18 +547,14 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             document.getElementById('questions-container').insertAdjacentHTML('beforeend', imgHTML);
             updateNumbering(); saveData();
         };
-        reader.readAsDataURL(file);
-        event.target.value = "";
+        reader.readAsDataURL(file); event.target.value = "";
     }
 
-    function resetPaper() {
-        if(confirm("Clear paper? Cannot be undone.")) { localStorage.removeItem('examPaperDraft'); location.reload(); }
-    }
+    function resetPaper() { if(confirm("Clear paper? Cannot be undone.")) { localStorage.removeItem('examPaperDraft'); location.reload(); } }
 
     // --- Multiple Paper Library System ---
     function openLibraryModal() { document.getElementById('library-modal').classList.remove('hidden'); renderLibraryList(); }
     function closeLibraryModal() { document.getElementById('library-modal').classList.add('hidden'); }
-    
     function saveToLibrary() {
         const name = document.getElementById('save-paper-name').value.trim();
         if(!name) return alert("Please enter a name for this paper.");
@@ -552,15 +564,10 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         document.getElementById('save-paper-name').value = "";
         renderLibraryList(); alert("Paper saved securely to your browser.");
     }
-    
     function renderLibraryList() {
         const library = JSON.parse(localStorage.getItem('paperLibrary')) || {};
-        const listDiv = document.getElementById('library-list');
-        listDiv.innerHTML = "";
-        if(Object.keys(library).length === 0) { 
-            listDiv.innerHTML = '<p class="text-gray-500 text-sm italic text-center py-4">No saved papers yet.</p>'; 
-            return; 
-        }
+        const listDiv = document.getElementById('library-list'); listDiv.innerHTML = "";
+        if(Object.keys(library).length === 0) { listDiv.innerHTML = '<p class="text-gray-500 text-sm italic text-center py-4">No saved papers yet.</p>'; return; }
         for (const [name, content] of Object.entries(library)) {
             const item = document.createElement('div');
             item.className = "flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200 shadow-sm";
@@ -573,7 +580,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             listDiv.appendChild(item);
         }
     }
-
     function loadFromLibrary(name) {
         if(confirm("Load this paper? Current unsaved progress will be lost.")) {
             const library = JSON.parse(localStorage.getItem('paperLibrary'));
@@ -581,13 +587,10 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             saveData(); closeLibraryModal();
         }
     }
-
     function deleteFromLibrary(name) {
         if(confirm(`Delete "${name}" from library?`)) {
             let library = JSON.parse(localStorage.getItem('paperLibrary'));
-            delete library[name];
-            localStorage.setItem('paperLibrary', JSON.stringify(library));
-            renderLibraryList();
+            delete library[name]; localStorage.setItem('paperLibrary', JSON.stringify(library)); renderLibraryList();
         }
     }
 
@@ -595,27 +598,17 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     function exportJSON() {
         const content = document.getElementById('paper-content').innerHTML;
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ html: content }));
-        const dlAnchorElem = document.createElement('a');
-        dlAnchorElem.setAttribute("href", dataStr);
-        dlAnchorElem.setAttribute("download", "SiddhiPatra_Backup.json");
-        dlAnchorElem.click();
+        const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "SiddhiPatra_Backup.json"); dlAnchorElem.click();
     }
-
     function importJSON(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+        const file = event.target.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
-                if (data.html) {
-                    document.getElementById('paper-content').innerHTML = data.html;
-                    saveData(); updateNumbering(); alert("Paper successfully imported!");
-                }
+                if (data.html) { document.getElementById('paper-content').innerHTML = data.html; saveData(); updateNumbering(); alert("Paper successfully imported!"); }
             } catch(err) { alert("Invalid JSON file."); }
-        };
-        reader.readAsText(file);
-        event.target.value = "";
+        }; reader.readAsText(file); event.target.value = "";
     }
 
     // --- Document Export Functions ---
@@ -623,7 +616,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         document.querySelectorAll('.action-menu').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.resize-box').forEach(el => el.style.border = 'none');
     }
-    
     function restoreAfterExport() {
         document.querySelectorAll('.action-menu').forEach(el => el.style.display = '');
         document.querySelectorAll('.resize-box').forEach(el => el.style.border = '');
@@ -631,36 +623,21 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 
     function exportPDF() {
         if (typeof MathJax !== 'undefined') MathJax.typeset([document.getElementById('paper')]);
-        const element = document.getElementById('paper');
-        prepareForExport();
-        const opt = {
-            margin: 0,
-            filename: 'SiddhiPatra_Paper.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['css', 'legacy'], avoid: '.avoid-break' }
-        };
+        const element = document.getElementById('paper'); prepareForExport();
+        const opt = { margin: 0, filename: 'SiddhiPatra_Paper.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: '.avoid-break' } };
         html2pdf().set(opt).from(element).save().then(restoreAfterExport);
     }
-
     function exportJPG() {
         if (typeof MathJax !== 'undefined') MathJax.typeset([document.getElementById('paper')]);
-        const element = document.getElementById('paper');
-        prepareForExport();
+        const element = document.getElementById('paper'); prepareForExport();
         html2canvas(element, { scale: 2 }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = 'SiddhiPatra_Paper.jpg';
-            link.href = canvas.toDataURL('image/jpeg', 0.9);
-            link.click();
+            const link = document.createElement('a'); link.download = 'SiddhiPatra_Paper.jpg'; link.href = canvas.toDataURL('image/jpeg', 0.9); link.click();
             restoreAfterExport();
         });
     }
-
     function exportWord() {
         const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>SiddhiPatra Paper</title></head><body>";
         const footer = "</body></html>";
-        
         prepareForExport(); 
         const clone = document.getElementById('paper').cloneNode(true);
         restoreAfterExport(); 
