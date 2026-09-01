@@ -45,13 +45,16 @@ body.dark-mode .a4-wrapper { background-color: #374151; }
     color: black;
     box-sizing: border-box;
     border-radius: 4px;
+    z-index: 10;
+    position: relative;
 }
 
-/* Allow horizontal panning on mobile */
+/* Allow horizontal panning on mobile & Transparent background for floating symbols */
 .a4-wrapper { 
     overflow-x: auto; 
     overflow-y: auto; 
     padding-right: 80px !important; 
+    background: transparent !important;
 }
 
 /* Editing UX */
@@ -118,6 +121,37 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* =====================================
+   NEW: FLOATING BACKGROUND ANIMATION
+===================================== */
+@keyframes floatUp {
+    0% { transform: translateY(110vh) rotate(0deg) scale(0.8); opacity: 0; }
+    10% { opacity: 0.15; } /* Keeps it very subtle so it doesn't distract */
+    90% { opacity: 0.15; }
+    100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; }
+}
+
+#floating-background {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; /* User can't click on them */
+    z-index: 0;
+    overflow: hidden;
+}
+
+.float-symbol {
+    position: absolute;
+    color: #9ca3af; /* Tailwind gray-400 */
+    font-weight: bold;
+    user-select: none;
+    animation: floatUp linear infinite;
+    opacity: 0;
+}
+
+body.dark-mode .float-symbol {
+    color: #4b5563; /* Tailwind gray-600 */
+}
+
 /* ==========================================================
    PERFECT NATIVE PDF PRINT CSS (Fixes Multi-Page clipping)
 ========================================================== */
@@ -133,7 +167,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     }
     
     body { background: white !important; padding: 0 !important; margin: 0 !important; color: black !important; }
-    .no-print, .sidebar, .export-bar, .mobile-header, #mobile-overlay, #splash-screen, .action-menu { display: none !important; }
+    .no-print, .sidebar, .export-bar, .mobile-header, #mobile-overlay, #splash-screen, .action-menu, #floating-background { display: none !important; }
     
     .a4-wrapper { background: white !important; padding: 0 !important; margin: 0 !important; }
     .a4-paper { 
@@ -336,6 +370,9 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 </head>
 <body class="flex flex-col h-screen md:h-screen h-[100dvh] overflow-hidden text-gray-800">
 
+<!-- FLOATING BACKGROUND CONTAINER -->
+<div id="floating-background"></div>
+
 <!-- ================= SPLASH SCREEN LOGO ================= -->
 <div id="splash-screen" class="fixed inset-0 z-[9999] bg-black flex items-center justify-center transition-opacity duration-1000 overflow-hidden" onclick="dismissSplash()">
     <div class="stage">
@@ -394,7 +431,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 
 <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-20 md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-<div class="flex flex-1 overflow-hidden relative">
+<div class="flex flex-1 overflow-hidden relative z-10">
     <!-- Sidebar Controls -->
     <aside id="sidebar" class="sidebar absolute md:relative inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-gray-900 text-white p-5 flex flex-col gap-4 overflow-y-auto z-30 shadow-2xl md:shadow-none h-full flex-shrink-0">
         <div class="hidden md:flex items-center gap-3">
@@ -485,7 +522,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         </div>
 
         <!-- A4 Paper Container -->
-        <div class="a4-wrapper flex-grow overflow-auto p-3 md:p-8 bg-gray-200">
+        <div class="a4-wrapper flex-grow overflow-auto p-3 md:p-8 bg-transparent">
             <div id="paper" class="a4-paper relative">
                 <!-- ALL Content is now inside this single container, fully sortable -->
                 <div id="paper-content" class="flex flex-col pb-10">
@@ -631,6 +668,38 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 </div>
 
 <script>
+    // --- Initialize Floating Background Elements ---
+    function initFloatingBackground() {
+        const container = document.getElementById('floating-background');
+        const symbols = [
+            '∑', '∫', '∞', '√', 'π', 'θ', 'Ω', '±', 'α', 'β', 'γ', 'Δ', '≈', '≠', '∈',
+            'A', 'B', 'C', 'X', 'Y', 'Z', 'x²', 'y³', 'sin', 'cos', 'tan',
+            'ક', 'ખ', 'ગ', 'ઘ', 'ચ', 'છ', 'જ', 'ઝ', 'ટ', 'ઠ', 'ડ', 'ઢ', 'ણ', 'ત', 'થ', 'દ', 'ધ', 'ન', 'પ', 'ફ', 'બ', 'ભ', 'મ', 'ય', 'ર', 'લ', 'વ', 'શ', 'ષ', 'સ', 'હ', 'ળ', 'ક્ષ', 'જ્ઞ',
+            'क', 'ख', 'ग', 'घ', 'च', 'छ', 'ज', 'झ', 'ट', 'ठ', 'ड', 'ढ', 'ण', 'त', 'थ', 'द', 'ध', 'न', 'प', 'फ', 'ब', 'भ', 'म', 'य', 'र', 'ल', 'व', 'श', 'ष', 'स', 'ह', 'क्ष', 'त्र', 'ज्ञ'
+        ];
+
+        const numSymbols = 45; // Number of floating items at a time
+
+        for (let i = 0; i < numSymbols; i++) {
+            const el = document.createElement('div');
+            const sizes = ['text-2xl', 'text-3xl', 'text-4xl', 'text-5xl'];
+            const randomSize = sizes[Math.floor(Math.random() * sizes.length)];
+            
+            el.className = `float-symbol ${randomSize}`;
+            el.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+            
+            el.style.left = `${Math.random() * 100}vw`; // Random horizontal position
+            
+            const duration = 15 + Math.random() * 25; // Random speed between 15s and 40s
+            const delay = Math.random() * 40; // Random start delay
+            
+            el.style.animationDuration = `${duration}s`;
+            el.style.animationDelay = `-${delay}s`;
+
+            container.appendChild(el);
+        }
+    }
+
     // --- Splash Screen Auto-Dismiss logic ---
     function dismissSplash() {
         const splash = document.getElementById('splash-screen');
@@ -638,6 +707,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         splash.style.opacity = '0';
         setTimeout(() => splash.style.display = 'none', 1000);
     }
+    // Automatically hide splash after 9 seconds (1 full animation cycle)
     setTimeout(dismissSplash, 9000);
 
     // --- Mobile Sidebar Toggle ---
@@ -720,13 +790,13 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         try {
             const res = await fetch(url);
             if (res.ok) return await res.json();
-        } catch (e) { console.log("Direct connection blocked, switching to Proxy 1..."); }
+        } catch (e) { }
 
         try {
             const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`;
             const res = await fetch(proxyUrl);
             if (res.ok) return await res.json();
-        } catch (e) { console.log("Proxy 1 blocked, switching to Proxy 2..."); }
+        } catch (e) { }
 
         try {
             const proxyUrl2 = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
@@ -782,7 +852,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             }
             saveData();
         } catch (error) {
-            alert("Connection completely blocked. Please temporarily disable AdBlock or Brave Shields for this site.");
+            alert("Connection completely blocked.");
         }
         currentTranslateContext.innerText = "🌐 Translate";
     }
@@ -805,19 +875,27 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                     let translatedLines = [];
                     
                     for (let line of lines) {
-                        if (!line.trim()) { translatedLines.push(line); continue; }
+                        if (!line.trim()) {
+                            translatedLines.push(line);
+                            continue;
+                        }
                         
                         const chunks = line.match(/.{1,1000}(\s|$)/g) || [line];
                         let translatedLine = "";
                         
                         for(let chunk of chunks) {
                             if(!chunk.trim()) continue;
+                            
                             const googleUrl = `https://inputtools.google.com/request?text=${encodeURIComponent(chunk)}&itc=${itc}&num=1&cp=0&cs=1&ie=utf-8&oe=utf-8`;
                             const data = await fetchWithFallback(googleUrl);
                             
                             if (data && data[0] === "SUCCESS") {
-                                for (let token of data[1]) { translatedLine += (token[1] ? token[1][0] : token[0]); }
-                            } else { translatedLine += chunk; }
+                                for (let token of data[1]) {
+                                    translatedLine += (token[1] ? token[1][0] : token[0]); 
+                                }
+                            } else {
+                                translatedLine += chunk;
+                            }
                         }
                         translatedLines.push(translatedLine);
                     }
@@ -826,7 +904,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             }
             saveData();
         } catch (error) {
-            alert("Connection completely blocked. Please temporarily disable AdBlock or Brave Shields for this site.");
+            alert("Connection completely blocked.");
         }
         currentTranslateContext.innerText = "🌐 Translate";
     }
@@ -836,6 +914,8 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     fullPaper.addEventListener('input', () => { saveData(); });
 
     window.onload = () => {
+        initFloatingBackground(); // Activate floating symbols!
+        
         const savedDraft = localStorage.getItem('examPaperDraft');
         if (savedDraft) { 
             document.getElementById('paper-content').innerHTML = savedDraft; 
@@ -1157,12 +1237,13 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         document.querySelectorAll('.resize-box').forEach(el => el.style.border = '');
     }
 
+    // PERMANENT FIX: NATIVE BROWSER PRINT TO FIX GUJARATI OVERLAP & MULTI-PAGE
     function exportPDF() {
-        alert("To ensure perfect Gujarati text rendering, we use your device's Native Print Engine.\n\nWhen the print menu opens, just choose 'Save as PDF' from the destination dropdown!");
+        alert("To fix the Gujarati overlapping issue, the PDF will now generate using your device's Native Print Engine.\n\nWhen the print menu appears, simply select 'Save as PDF' from the destination dropdown!");
         window.print();
     }
 
-    // MULTIPLE A4 JPG DOWNLOADS
+    // PERMANENT FIX: MULTIPLE A4 JPG DOWNLOADS
     function exportJPG() {
         if (typeof MathJax !== 'undefined') MathJax.typeset([document.getElementById('paper')]);
         
@@ -1176,7 +1257,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         // Force width to standard A4 pixels (794px at 96dpi) so it never squishes
         paper.style.width = '794px';
         paper.style.minWidth = '794px';
-        paper.style.margin = '0';
+        paper.style.margin = '0 auto';
         
         html2canvas(paper, { scale: 2, useCORS: true }).then(canvas => {
             // Restore UI immediately
@@ -1185,32 +1266,34 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             paper.style.margin = origMargin;
             restoreAfterExport();
 
-            // Calculate exact A4 Page Height based on the forced 794px width
-            // A4 mathematical ratio is 297/210 = 1.41428
-            const pageHeight = canvas.width * 1.41428;
+            // Slicing logic: A4 ratio is 297mm height / 210mm width = ~1.414
+            const pageHeight = canvas.width * 1.414;
             const totalPages = Math.ceil(canvas.height / pageHeight);
 
-            // Slice the canvas and download each page independently
             for (let i = 0; i < totalPages; i++) {
                 const pageCanvas = document.createElement('canvas');
                 pageCanvas.width = canvas.width;
                 pageCanvas.height = pageHeight;
                 const ctx = pageCanvas.getContext('2d');
 
-                // Fill white background to prevent transparent gaps
+                // Fill with white
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
 
-                // Draw specific slice
-                ctx.drawImage(canvas, 0, i * pageHeight, canvas.width, pageHeight, 0, 0, canvas.width, pageHeight);
+                // Draw section from the main canvas
+                ctx.drawImage(
+                    canvas, 
+                    0, i * pageHeight, canvas.width, pageHeight, 
+                    0, 0, canvas.width, pageHeight
+                );
 
-                // Trigger download with a slight delay so browsers don't block multiple files
+                // Download each slice
                 setTimeout(() => {
                     const link = document.createElement('a'); 
                     link.download = `SiddhiPatra_Page_${i + 1}.jpg`; 
                     link.href = pageCanvas.toDataURL('image/jpeg', 0.95); 
                     link.click();
-                }, i * 300);
+                }, i * 400); // 400ms delay between downloads so browsers don't block them
             }
         });
     }
