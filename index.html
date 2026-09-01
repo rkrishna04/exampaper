@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,6 +18,9 @@
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 <style>
+/* =====================================
+   APP MAIN STYLES
+===================================== */
 /* Light/Dark Mode Transitions */
 body { background-color: #f3f4f6; transition: background-color 0.3s ease, color 0.3s ease; }
 body.dark-mode { background-color: #111827; color: #f9fafb; }
@@ -113,23 +117,251 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 /* Print optimizations */
 @media print {
     body { background: none; }
-    .no-print, .sidebar, .export-bar, .mobile-header, #mobile-overlay { display: none !important; }
+    .no-print, .sidebar, .export-bar, .mobile-header, #mobile-overlay, #splash-screen { display: none !important; }
     .a4-paper { margin: 0; box-shadow: none; border: none; padding: 0; border-radius: 0; max-width: none; min-width: 0; }
     .a4-wrapper { overflow: visible !important; background: none !important; padding: 0 !important; }
     .blank-space-box { border: none !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; resize: none !important; }
     .resize-box { resize: none; border: none !important; }
     [contenteditable="true"] { outline: none !important; background: none !important; padding: 0; }
 }
+
+/* =====================================
+   DIVINE RESONANCE LOGO ANIMATION (SPLASH SCREEN)
+===================================== */
+#splash-screen {
+    font-family: Arial, sans-serif;
+}
+
+.stage {
+    position: relative;
+    width: 700px;
+    height: 700px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.energy-core {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #fff4d6;
+    box-shadow: 0 0 10px #fff4d6, 0 0 30px #e8a84d, 0 0 70px #a85b18;
+    opacity: 0;
+    z-index: 20;
+    animation: coreAppear 9s infinite;
+}
+
+.wave {
+    position: absolute;
+    border: 1px solid rgba(255, 211, 139, 0.5);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.wave-1 { width: 30px; height: 30px; animation: waveExpand 9s infinite 1.8s; }
+.wave-2 { width: 30px; height: 30px; animation: waveExpand 9s infinite 2.1s; }
+.wave-3 { width: 30px; height: 30px; animation: waveExpand 9s infinite 2.4s; }
+
+.energy-line {
+    position: absolute;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #b56b20, #fff0c9, #b56b20, transparent);
+    transform: rotate(-47deg);
+    box-shadow: 0 0 10px rgba(255, 215, 145, 0.9), 0 0 30px rgba(206, 119, 35, 0.7);
+    z-index: 30;
+    animation: energyTravel 9s infinite;
+}
+
+.traveller {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #fff9e8;
+    box-shadow: 0 0 10px #fff, 0 0 25px #f0a94d, 0 0 60px #c36c1f;
+    opacity: 0;
+    z-index: 40;
+    animation: travellerMove 9s infinite;
+}
+
+.logo-wrapper {
+    position: relative;
+    width: 500px;
+    height: 500px;
+    z-index: 10;
+}
+
+.logo-base {
+    position: absolute;
+    width: 100%;
+    height: auto;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    filter: drop-shadow(0 0 0 transparent);
+    animation: logoFinalAppear 9s infinite, logoBreath 9s infinite;
+}
+
+.slice {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.slice img {
+    position: absolute;
+    width: 100%;
+    height: auto;
+    left: 0;
+    filter: drop-shadow(0 0 12px rgba(255, 215, 145, 0.35));
+}
+
+.slice-1 { top: 0; clip-path: polygon(0 0, 100% 0, 100% 18%, 0 30%); animation: sliceOne 9s infinite; }
+.slice-2 { top: 0; clip-path: polygon(0 25%, 100% 15%, 100% 38%, 0 48%); animation: sliceTwo 9s infinite; }
+.slice-3 { top: 0; clip-path: polygon(0 45%, 100% 35%, 100% 58%, 0 68%); animation: sliceThree 9s infinite; }
+.slice-4 { top: 0; clip-path: polygon(0 65%, 100% 55%, 100% 78%, 0 88%); animation: sliceFour 9s infinite; }
+.slice-5 { top: 0; clip-path: polygon(0 85%, 100% 75%, 100% 100%, 0 100%); animation: sliceFive 9s infinite; }
+
+.scanner {
+    position: absolute;
+    width: 140%;
+    height: 45px;
+    left: -20%;
+    top: -100px;
+    transform: rotate(-18deg);
+    background: linear-gradient(90deg, transparent, rgba(255, 213, 139, 0.05), rgba(255, 237, 199, 0.9), rgba(255, 191, 93, 0.2), transparent);
+    filter: blur(5px);
+    opacity: 0;
+    z-index: 50;
+    pointer-events: none;
+    animation: scannerMove 9s infinite;
+}
+
+.dust { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 60; }
+.dot {
+    position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #ffe1a3;
+    box-shadow: 0 0 6px #ffe1a3, 0 0 14px #c87824; opacity: 0; animation: dustMove 9s infinite;
+}
+
+.d1 { left: 20%; top: 30%; animation-delay: 2s; }
+.d2 { left: 30%; top: 15%; animation-delay: 2.3s; }
+.d3 { left: 40%; top: 22%; animation-delay: 2.6s; }
+.d4 { left: 65%; top: 18%; animation-delay: 2.2s; }
+.d5 { left: 78%; top: 35%; animation-delay: 2.8s; }
+.d6 { left: 85%; top: 50%; animation-delay: 3.1s; }
+.d7 { left: 75%; top: 72%; animation-delay: 2.4s; }
+.d8 { left: 60%; top: 85%; animation-delay: 3.3s; }
+.d9 { left: 35%; top: 80%; animation-delay: 2.7s; }
+.d10 { left: 15%; top: 65%; animation-delay: 3s; }
+
+.echo { position: absolute; width: 100%; height: 100%; left: 0; top: 0; opacity: 0; pointer-events: none; }
+.echo img { width: 100%; filter: drop-shadow(0 0 20px rgba(255, 204, 120, 0.5)); }
+
+.stage:hover .echo { animation: echoEffect 1.4s ease-out; }
+.stage:hover .logo-base { filter: drop-shadow(0 0 15px rgba(255, 230, 180, 0.7)) drop-shadow(0 0 50px rgba(195, 110, 30, 0.4)); }
+
+/* Logo Keyframes */
+@keyframes energyTravel {
+    0% { width: 0; opacity: 0; }
+    8% { opacity: 0; }
+    18% { width: 650px; opacity: 1; }
+    35% { width: 650px; opacity: 0; }
+    100% { width: 0; opacity: 0; }
+}
+@keyframes travellerMove {
+    0% { opacity: 0; transform: translate(-250px, 250px); }
+    10% { opacity: 1; }
+    30% { opacity: 1; transform: translate(250px, -250px); }
+    40% { opacity: 0; }
+    100% { opacity: 0; }
+}
+@keyframes coreAppear {
+    0%, 25% { opacity: 0; transform: scale(0); }
+    32% { opacity: 1; transform: scale(2); }
+    40% { opacity: 0.5; transform: scale(1); }
+    100% { opacity: 0; }
+}
+@keyframes sliceOne { 0%, 18% { opacity: 0; transform: translate(-150px, -100px) rotate(-8deg); } 28%, 75% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 0; } }
+@keyframes sliceTwo { 0%, 21% { opacity: 0; transform: translate(180px, -40px) rotate(6deg); } 31%, 75% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 0; } }
+@keyframes sliceThree { 0%, 24% { opacity: 0; transform: translate(-180px, 0) rotate(-5deg); } 34%, 75% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 0; } }
+@keyframes sliceFour { 0%, 27% { opacity: 0; transform: translate(180px, 60px) rotate(7deg); } 37%, 75% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 0; } }
+@keyframes sliceFive { 0%, 30% { opacity: 0; transform: translate(-120px, 120px) rotate(-8deg); } 40%, 75% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 0; } }
+@keyframes logoFinalAppear { 0%, 38% { opacity: 0; } 45%, 75% { opacity: 1; } 90% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes logoBreath { 0%, 45% { transform: scale(1); } 60% { transform: scale(1.025); } 75% { transform: scale(1); } 100% { transform: scale(1); } }
+@keyframes scannerMove { 0%, 15% { top: -100px; opacity: 0; } 22% { opacity: 1; } 45% { top: 600px; opacity: 0; } 100% { opacity: 0; } }
+@keyframes waveExpand { 0% { opacity: 0; transform: scale(0); } 30% { opacity: 0.8; } 60% { opacity: 0; transform: scale(15); } 100% { opacity: 0; } }
+@keyframes dustMove { 0% { opacity: 0; transform: translateY(20px) scale(0.5); } 30% { opacity: 1; } 60% { opacity: 0.8; transform: translateY(-25px) translateX(10px); } 85% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes echoEffect { 0% { opacity: 0.7; transform: scale(1); } 100% { opacity: 0; transform: scale(1.18); } }
+
+@media (max-width: 700px) {
+    .stage { width: 100vw; height: 100vw; }
+    .logo-wrapper { width: 80vw; height: 80vw; }
+    .energy-line { max-width: 90vw; }
+}
 </style>
 </head>
 <body class="flex flex-col h-screen md:h-screen h-[100dvh] overflow-hidden text-gray-800">
 
+<!-- ================= SPLASH SCREEN LOGO ================= -->
+<div id="splash-screen" class="fixed inset-0 z-[9999] bg-black flex items-center justify-center transition-opacity duration-1000 overflow-hidden" onclick="dismissSplash()">
+    <div class="stage">
+        <!-- CENTRAL ENERGY -->
+        <div class="energy-core"></div>
+        <!-- RESONANCE WAVES -->
+        <div class="wave wave-1"></div>
+        <div class="wave wave-2"></div>
+        <div class="wave wave-3"></div>
+        <!-- ENERGY LINE -->
+        <div class="energy-line"></div>
+        <!-- TRAVELLING LIGHT -->
+        <div class="traveller"></div>
+
+        <!-- LOGO -->
+        <div class="logo-wrapper">
+            <!-- FINAL ORIGINAL LOGO -->
+            <img src="C:\Users\Krishna\Downloads/Siddhi_Patra.png" class="logo-base" alt="Website Logo">
+            <!-- LOGO FRAGMENTS -->
+            <div class="slice slice-1"><img src="C:\Users\Krishna\Downloads\Siddhi_Patra.png" alt=""></div>
+            <div class="slice slice-2"><img src="C:\Users\Krishna\Downloads\Siddhi_Patra.png" alt=""></div>
+            <div class="slice slice-3"><img src="C:\Users\Krishna\Downloads\Siddhi_Patra.png" alt=""></div>
+            <div class="slice slice-4"><img src="C:\Users\Krishna\Downloads\Siddhi_Patra.png" alt=""></div>
+            <div class="slice slice-5"><img src="C:\Users\Krishna\Downloads\Siddhi_Patra.png" alt=""></div>
+            <!-- SCANNING LIGHT -->
+            <div class="scanner"></div>
+            <!-- HOVER ECHO -->
+            <div class="echo"><img src="C:\Users\Krishna\Downloads/Siddhi_Patra.png" alt=""></div>
+        </div>
+
+        <!-- GOLDEN DUST -->
+        <div class="dust">
+            <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
+            <span class="dot d4"></span><span class="dot d5"></span><span class="dot d6"></span>
+            <span class="dot d7"></span><span class="dot d8"></span><span class="dot d9"></span>
+            <span class="dot d10"></span>
+        </div>
+    </div>
+    
+    <div class="absolute bottom-10 text-gray-400 text-sm animate-pulse uppercase tracking-widest cursor-pointer">
+        Click anywhere to Enter
+    </div>
+</div>
+
+<!-- ================= APP INTERFACE ================= -->
 <!-- Mobile Header -->
 <div class="mobile-header md:hidden flex items-center justify-between bg-gray-900 text-white p-4 shadow-md z-40 relative">
     <div class="flex items-center gap-3">
-        <img src="Siddhi_Patra.png" alt="SiddhiPatra Logo" onerror="this.style.display='none'" class="w-10 h-10 rounded-full object-cover">
+        <img src="Siddhi_Patra.png" alt="SiddhiPatra Logo" onerror="this.style.display='none'" class="w-10 h-10 rounded-full object-cover bg-black">
         <h1 class="text-xl font-black text-blue-400 tracking-wide">SiddhiPatra</h1>
-    </div>    
+    </div>  
     <button onclick="toggleSidebar()" class="p-2 rounded bg-gray-800 hover:bg-gray-700 focus:outline-none">
         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
     </button>
@@ -141,7 +373,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     <!-- Sidebar Controls -->
     <aside id="sidebar" class="sidebar absolute md:relative inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-gray-900 text-white p-5 flex flex-col gap-4 overflow-y-auto z-30 shadow-2xl md:shadow-none h-full flex-shrink-0">
         <div class="hidden md:flex items-center gap-3">
-            <img src="Siddhi_Patra.png" alt="SiddhiPatra Logo" onerror="this.style.display='none'" class="w-12 h-12 rounded-full object-cover">
+            <img src="Siddhi_Patra.png" alt="SiddhiPatra Logo" onerror="this.style.display='none'" class="w-12 h-12 rounded-full object-cover bg-black">
             <h1 class="text-2xl font-black text-blue-400 tracking-wide hidden md:block">SiddhiPatra</h1>
         </div>
         
@@ -156,7 +388,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         </div>
 
         <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-4">
-            
             <!-- SECTION: Paper Layout Elements -->
             <div>
                 <h2 id="ui-layout" class="text-xs uppercase tracking-wider font-bold text-gray-400 mb-2">Paper Layout</h2>
@@ -375,6 +606,16 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 </div>
 
 <script>
+    // --- Splash Screen Auto-Dismiss logic ---
+    function dismissSplash() {
+        const splash = document.getElementById('splash-screen');
+        if(!splash) return;
+        splash.style.opacity = '0';
+        setTimeout(() => splash.style.display = 'none', 1000);
+    }
+    // Automatically hide splash after 9 seconds (1 full animation cycle)
+    setTimeout(dismissSplash, 9000);
+
     // --- Mobile Sidebar Toggle ---
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
@@ -452,20 +693,17 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     // --- TRIPLE-FALLBACK FETCH ENGINE
     // ==========================================
     async function fetchWithFallback(url) {
-        // 1. Try direct connection first
         try {
             const res = await fetch(url);
             if (res.ok) return await res.json();
         } catch (e) { console.log("Direct connection blocked, switching to Proxy 1..."); }
 
-        // 2. Try CodeTabs Proxy
         try {
             const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`;
             const res = await fetch(proxyUrl);
             if (res.ok) return await res.json();
         } catch (e) { console.log("Proxy 1 blocked, switching to Proxy 2..."); }
 
-        // 3. Try AllOrigins Proxy
         try {
             const proxyUrl2 = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
             const res = await fetch(proxyUrl2);
@@ -509,7 +747,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             for (let el of editables) {
                 const text = el.innerText;
                 if (text.trim() && isNaN(text.trim()) && !text.trim().match(/^Q-\d+\)$/) && !text.trim().match(/^\d+\)$/)) { 
-                    
                     const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(text)}`;
                     const data = await fetchWithFallback(googleUrl);
                     
