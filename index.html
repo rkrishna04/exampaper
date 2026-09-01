@@ -1,10 +1,14 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SiddhiPatra - Exam Paper Generator</title>
+
+<!-- IMPORT NOTO SANS FONT FOR PERFECT GUJARATI RENDERING -->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;700&display=swap');
+</style>
 
 <!-- Tailwind CSS for styling -->
 <script src="https://cdn.tailwindcss.com"></script>
@@ -37,7 +41,7 @@ body.dark-mode .a4-wrapper { background-color: #374151; }
     margin: 0 auto;
     background: white;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    font-family: 'Times New Roman', Times, serif;
+    font-family: 'Noto Sans Gujarati', 'Times New Roman', Times, serif;
     color: black;
     box-sizing: border-box;
     border-radius: 4px;
@@ -114,15 +118,36 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Print optimizations */
+/* ==========================================================
+   PERFECT NATIVE PDF PRINT CSS (Fixes Multi-Page clipping)
+========================================================== */
+@page { size: A4 portrait; margin: 15mm; }
 @media print {
-    body { background: none; }
-    .no-print, .sidebar, .export-bar, .mobile-header, #mobile-overlay, #splash-screen { display: none !important; }
-    .a4-paper { margin: 0; box-shadow: none; border: none; padding: 0; border-radius: 0; max-width: none; min-width: 0; }
-    .a4-wrapper { overflow: visible !important; background: none !important; padding: 0 !important; }
-    .blank-space-box { border: none !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; resize: none !important; }
-    .resize-box { resize: none; border: none !important; }
-    [contenteditable="true"] { outline: none !important; background: none !important; padding: 0; }
+    /* UNLOCK THE HEIGHT TO ALLOW MULTIPLE PAGES TO PRINT */
+    html, body, .flex-1, main, .a4-wrapper, .a4-paper {
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+        display: block !important;
+        position: static !important;
+    }
+    
+    body { background: white !important; padding: 0 !important; margin: 0 !important; color: black !important; }
+    .no-print, .sidebar, .export-bar, .mobile-header, #mobile-overlay, #splash-screen, .action-menu { display: none !important; }
+    
+    .a4-wrapper { background: white !important; padding: 0 !important; margin: 0 !important; }
+    .a4-paper { 
+        width: 100% !important; 
+        min-width: 0 !important;
+        margin: 0 !important; 
+        padding: 0 !important; 
+        box-shadow: none !important; 
+        border: none !important;
+    }
+    
+    .blank-space-box { border: none !important; resize: none !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .resize-box { resize: none !important; border: none !important; }
+    [contenteditable="true"] { outline: none !important; background: none !important; padding: 0 !important; }
 }
 
 /* =====================================
@@ -452,10 +477,10 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
                 </div>
             </div>
             
+            <!-- EXPORT BUTTONS (DOC Removed) -->
             <div class="flex items-center gap-2 border-l-2 pl-4 border-gray-200">
-                <button id="btn-dlWord" onclick="exportWord()" class="bg-blue-50 text-blue-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-blue-100 shadow-sm border border-blue-200 transition-colors">DOC</button>
                 <button id="btn-dlJPG" onclick="exportJPG()" class="bg-green-50 text-green-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-green-100 shadow-sm border border-green-200 transition-colors">JPG</button>
-                <button id="btn-dlPDF" onclick="exportPDF()" class="bg-red-50 text-red-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-red-100 shadow-sm border border-red-200 transition-colors">PDF</button>
+                <button id="btn-dlPDF" onclick="exportPDF()" class="bg-red-50 text-red-700 px-4 py-2 text-sm rounded-lg font-bold hover:bg-red-100 shadow-sm border border-red-200 transition-colors">PDF / Print</button>
             </div>
         </div>
 
@@ -613,7 +638,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         splash.style.opacity = '0';
         setTimeout(() => splash.style.display = 'none', 1000);
     }
-    // Automatically hide splash after 9 seconds (1 full animation cycle)
     setTimeout(dismissSplash, 9000);
 
     // --- Mobile Sidebar Toggle ---
@@ -627,13 +651,13 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
 
     // --- Translations Dictionary ---
     const i18n = {
-        en: { layout: "Paper Layout", addTitle: "+ Center Title", addSubtitle: "+ Center Subtitle", addRow: "+ 2-Column Row", addRight: "+ Right Text", addDiv: "+ Divider Line", tools: "Questions", lang: "Language:", addSpace: "+ Blank Space", addMain: "+ Main Question", addSub: "+ Sub Question", addMCQ: "+ MCQ Block", addText: "+ Text Block", addOR: "+ OR Separator", addImage: "+ Insert Image", addTable: "+ Data Table", renderMath: "∑ Render Math", clearData: "Clear All Data", dlWord: "DOC", dlJPG: "JPG", dlPDF: "PDF" },
-        gu: { layout: "પેપર લેઆઉટ", addTitle: "+ મુખ્ય શીર્ષક", addSubtitle: "+ મધ્ય ઉપશીર્ષક", addRow: "+ 2-કોલમ પંક્તિ", addRight: "+ જમણું લખાણ", addDiv: "+ વિભાજક રેખા", tools: "પ્રશ્નો", lang: "ભાષા:", addSpace: "+ ખાલી જગ્યા", addMain: "+ મુખ્ય પ્રશ્ન", addSub: "+ પેટા પ્રશ્ન", addMCQ: "+ બહુવિકલ્પી (MCQ)", addText: "+ ટેક્સ્ટ બ્લોક", addOR: "+ OR", addImage: "+ ચિત્ર ઉમેરો", addTable: "+ ડેટા ટેબલ", renderMath: "∑ ગણિત બતાવો", clearData: "બધો ડેટા ભૂંસી નાખો", dlWord: "DOC ડાઉનલોડ", dlJPG: "JPG ડાઉનલોડ", dlPDF: "PDF ડાઉનલોડ" },
-        hi: { layout: "पेपर लेआउट", addTitle: "+ मुख्य शीर्षक", addSubtitle: "+ मध्य उपशीर्षक", addRow: "+ 2-कॉलम पंक्ति", addRight: "+ दायां पाठ", addDiv: "+ विभाजक रेखा", tools: "प्रश्न", lang: "भाषाः", addSpace: "+ खाली जगह", addMain: "+ मुख्य प्रश्न", addSub: "+ उप प्रश्न", addMCQ: "+ बहुविकल्पीय (MCQ)", addText: "+ टेक्स्ट ब्लॉक", addOR: "+ OR विभाजक", addImage: "+ छवि डालें", addTable: "+ डेटा टेबल", renderMath: "∑ गणित दिखाएं", clearData: "सभी डेटा मिटाएं", dlWord: "DOC डाउनलोड", dlJPG: "JPG डाउनलोड", dlPDF: "PDF डाउनलोड" }
+        en: { layout: "Paper Layout", addTitle: "+ Center Title", addSubtitle: "+ Center Subtitle", addRow: "+ 2-Column Row", addRight: "+ Right Text", addDiv: "+ Divider Line", tools: "Questions", lang: "Language:", addSpace: "+ Blank Space", addMain: "+ Main Question", addSub: "+ Sub Question", addMCQ: "+ MCQ Block", addText: "+ Text Block", addOR: "+ OR Separator", addImage: "+ Insert Image", addTable: "+ Data Table", renderMath: "∑ Render Math", clearData: "Clear All Data", dlJPG: "JPG", dlPDF: "PDF / Print" },
+        gu: { layout: "પેપર લેઆઉટ", addTitle: "+ મુખ્ય શીર્ષક", addSubtitle: "+ મધ્ય ઉપશીર્ષક", addRow: "+ 2-કોલમ પંક્તિ", addRight: "+ જમણું લખાણ", addDiv: "+ વિભાજક રેખા", tools: "પ્રશ્નો", lang: "ભાષા:", addSpace: "+ ખાલી જગ્યા", addMain: "+ મુખ્ય પ્રશ્ન", addSub: "+ પેટા પ્રશ્ન", addMCQ: "+ બહુવિકલ્પી (MCQ)", addText: "+ ટેક્સ્ટ બ્લોક", addOR: "+ OR", addImage: "+ ચિત્ર ઉમેરો", addTable: "+ ડેટા ટેબલ", renderMath: "∑ ગણિત બતાવો", clearData: "બધો ડેટા ભૂંસી નાખો", dlJPG: "JPG ડાઉનલોડ", dlPDF: "PDF / પ્રિન્ટ" },
+        hi: { layout: "पेपर लेआउट", addTitle: "+ मुख्य शीर्षक", addSubtitle: "+ मध्य उपशीर्षक", addRow: "+ 2-कॉलम पंक्ति", addRight: "+ दायां पाठ", addDiv: "+ विभाजक रेखा", tools: "प्रश्न", lang: "भाषाः", addSpace: "+ खाली जगह", addMain: "+ मुख्य प्रश्न", addSub: "+ उप प्रश्न", addMCQ: "+ बहुविकल्पीय (MCQ)", addText: "+ टेक्स्ट ब्लॉक", addOR: "+ OR विभाजक", addImage: "+ छवि डालें", addTable: "+ डेटा टेबल", renderMath: "∑ गणित दिखाएं", clearData: "सभी डेटा मिटाएं", dlJPG: "JPG डाउनलोड", dlPDF: "PDF / प्रिंट" }
     };
     function changeLanguage() {
         const lang = document.getElementById('lang-select').value; const dict = i18n[lang];
-        document.getElementById('ui-layout').innerText = dict.layout; document.getElementById('btn-addTitle').innerText = dict.addTitle; document.getElementById('btn-addSubtitle').innerText = dict.addSubtitle; document.getElementById('btn-addRow').innerText = dict.addRow; document.getElementById('btn-addRight').innerText = dict.addRight; document.getElementById('btn-addDiv').innerText = dict.addDiv; document.getElementById('ui-tools').innerText = dict.tools; document.getElementById('ui-lang').innerText = dict.lang; document.getElementById('btn-addMain').innerText = dict.addMain; document.getElementById('btn-addSub').innerText = dict.addSub; document.getElementById('btn-addMCQ').innerText = dict.addMCQ; document.getElementById('btn-addText').innerText = dict.addText; document.getElementById('btn-addSpace').innerText = dict.addSpace; document.getElementById('btn-addOR').innerText = dict.addOR; document.getElementById('btn-addImage').innerText = dict.addImage; document.getElementById('btn-addTable').innerText = dict.addTable; document.getElementById('btn-renderMath').innerText = dict.renderMath; document.getElementById('btn-clearData').innerText = dict.clearData; document.getElementById('btn-dlWord').innerText = dict.dlWord; document.getElementById('btn-dlJPG').innerText = dict.dlJPG; document.getElementById('btn-dlPDF').innerText = dict.dlPDF;
+        document.getElementById('ui-layout').innerText = dict.layout; document.getElementById('btn-addTitle').innerText = dict.addTitle; document.getElementById('btn-addSubtitle').innerText = dict.addSubtitle; document.getElementById('btn-addRow').innerText = dict.addRow; document.getElementById('btn-addRight').innerText = dict.addRight; document.getElementById('btn-addDiv').innerText = dict.addDiv; document.getElementById('ui-tools').innerText = dict.tools; document.getElementById('ui-lang').innerText = dict.lang; document.getElementById('btn-addMain').innerText = dict.addMain; document.getElementById('btn-addSub').innerText = dict.addSub; document.getElementById('btn-addMCQ').innerText = dict.addMCQ; document.getElementById('btn-addText').innerText = dict.addText; document.getElementById('btn-addSpace').innerText = dict.addSpace; document.getElementById('btn-addOR').innerText = dict.addOR; document.getElementById('btn-addImage').innerText = dict.addImage; document.getElementById('btn-addTable').innerText = dict.addTable; document.getElementById('btn-renderMath').innerText = dict.renderMath; document.getElementById('btn-clearData').innerText = dict.clearData; document.getElementById('btn-dlJPG').innerText = dict.dlJPG; document.getElementById('btn-dlPDF').innerText = dict.dlPDF;
     }
 
     // --- Core Formatting & UX Features ---
@@ -731,7 +755,6 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
         currentTranslateContext = null;
     }
 
-    // 1. Full Text Translation 
     async function executeTranslation() {
         if(!currentTranslateContext) return;
         const fromLang = document.getElementById('trans-from').value;
@@ -760,12 +783,10 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             saveData();
         } catch (error) {
             alert("Connection completely blocked. Please temporarily disable AdBlock or Brave Shields for this site.");
-            console.error(error);
         }
         currentTranslateContext.innerText = "🌐 Translate";
     }
 
-    // 2. Phonetic Transliteration
     async function executeTransliteration() {
         if(!currentTranslateContext) return;
         const itc = document.getElementById('transl-to').value;
@@ -780,32 +801,23 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             for (let el of editables) {
                 const text = el.innerText;
                 if (text.trim() && isNaN(text.trim()) && !text.trim().match(/^Q-\d+\)$/) && !text.trim().match(/^\d+\)$/)) { 
-                    
                     const lines = text.split('\n');
                     let translatedLines = [];
                     
                     for (let line of lines) {
-                        if (!line.trim()) {
-                            translatedLines.push(line);
-                            continue;
-                        }
+                        if (!line.trim()) { translatedLines.push(line); continue; }
                         
                         const chunks = line.match(/.{1,1000}(\s|$)/g) || [line];
                         let translatedLine = "";
                         
                         for(let chunk of chunks) {
                             if(!chunk.trim()) continue;
-                            
                             const googleUrl = `https://inputtools.google.com/request?text=${encodeURIComponent(chunk)}&itc=${itc}&num=1&cp=0&cs=1&ie=utf-8&oe=utf-8`;
                             const data = await fetchWithFallback(googleUrl);
                             
                             if (data && data[0] === "SUCCESS") {
-                                for (let token of data[1]) {
-                                    translatedLine += (token[1] ? token[1][0] : token[0]); 
-                                }
-                            } else {
-                                translatedLine += chunk;
-                            }
+                                for (let token of data[1]) { translatedLine += (token[1] ? token[1][0] : token[0]); }
+                            } else { translatedLine += chunk; }
                         }
                         translatedLines.push(translatedLine);
                     }
@@ -815,9 +827,7 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
             saveData();
         } catch (error) {
             alert("Connection completely blocked. Please temporarily disable AdBlock or Brave Shields for this site.");
-            console.error(error);
         }
-        
         currentTranslateContext.innerText = "🌐 Translate";
     }
 
@@ -1148,64 +1158,61 @@ body.dark-mode .format-btn:hover { background: #6b7280; }
     }
 
     function exportPDF() {
-        if (typeof MathJax !== 'undefined') MathJax.typeset([document.getElementById('paper')]);
-        const element = document.getElementById('paper'); 
-        prepareForExport();
-        
-        // TEMPORARY LAYOUT FIX FOR MULTI-PAGE PDF MARGINS
-        const origWidth = element.style.width;
-        const origMinWidth = element.style.minWidth;
-        const origPadding = element.style.padding;
-        
-        element.style.width = '170mm'; 
-        element.style.minWidth = '170mm';
-        element.style.padding = '0';
-
-        const opt = { 
-            margin: 20, // 20mm safe printing margin on EVERY page
-            filename: 'SiddhiPatra_Paper.pdf', 
-            image: { type: 'jpeg', quality: 0.98 }, 
-            html2canvas: { scale: 2, useCORS: true }, 
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, 
-            pagebreak: { mode: ['css', 'legacy'], avoid: '.avoid-break' } 
-        };
-        
-        html2pdf().set(opt).from(element).save().then(() => {
-            // Restore original CSS layout
-            element.style.width = origWidth;
-            element.style.minWidth = origMinWidth;
-            element.style.padding = origPadding;
-            restoreAfterExport();
-        });
+        alert("To ensure perfect Gujarati text rendering, we use your device's Native Print Engine.\n\nWhen the print menu opens, just choose 'Save as PDF' from the destination dropdown!");
+        window.print();
     }
 
+    // MULTIPLE A4 JPG DOWNLOADS
     function exportJPG() {
         if (typeof MathJax !== 'undefined') MathJax.typeset([document.getElementById('paper')]);
-        const element = document.getElementById('paper'); prepareForExport();
-        html2canvas(element, { scale: 2 }).then(canvas => {
-            const link = document.createElement('a'); link.download = 'SiddhiPatra_Paper.jpg'; link.href = canvas.toDataURL('image/jpeg', 0.9); link.click();
+        
+        prepareForExport();
+        const paper = document.getElementById('paper');
+        
+        const origWidth = paper.style.width;
+        const origMinWidth = paper.style.minWidth;
+        const origMargin = paper.style.margin;
+        
+        // Force width to standard A4 pixels (794px at 96dpi) so it never squishes
+        paper.style.width = '794px';
+        paper.style.minWidth = '794px';
+        paper.style.margin = '0';
+        
+        html2canvas(paper, { scale: 2, useCORS: true }).then(canvas => {
+            // Restore UI immediately
+            paper.style.width = origWidth;
+            paper.style.minWidth = origMinWidth;
+            paper.style.margin = origMargin;
             restoreAfterExport();
+
+            // Calculate exact A4 Page Height based on the forced 794px width
+            // A4 mathematical ratio is 297/210 = 1.41428
+            const pageHeight = canvas.width * 1.41428;
+            const totalPages = Math.ceil(canvas.height / pageHeight);
+
+            // Slice the canvas and download each page independently
+            for (let i = 0; i < totalPages; i++) {
+                const pageCanvas = document.createElement('canvas');
+                pageCanvas.width = canvas.width;
+                pageCanvas.height = pageHeight;
+                const ctx = pageCanvas.getContext('2d');
+
+                // Fill white background to prevent transparent gaps
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+                // Draw specific slice
+                ctx.drawImage(canvas, 0, i * pageHeight, canvas.width, pageHeight, 0, 0, canvas.width, pageHeight);
+
+                // Trigger download with a slight delay so browsers don't block multiple files
+                setTimeout(() => {
+                    const link = document.createElement('a'); 
+                    link.download = `SiddhiPatra_Page_${i + 1}.jpg`; 
+                    link.href = pageCanvas.toDataURL('image/jpeg', 0.95); 
+                    link.click();
+                }, i * 300);
+            }
         });
-    }
-    function exportWord() {
-        const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>SiddhiPatra Paper</title></head><body>";
-        const footer = "</body></html>";
-        prepareForExport(); 
-        const clone = document.getElementById('paper').cloneNode(true);
-        restoreAfterExport(); 
-        
-        const editables = clone.querySelectorAll('[contenteditable="true"]');
-        editables.forEach(el => el.removeAttribute('contenteditable'));
-        clone.querySelectorAll('.no-print').forEach(el => el.remove());
-        
-        const sourceHTML = header + clone.innerHTML + footer;
-        const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
-        const fileDownload = document.createElement("a");
-        document.body.appendChild(fileDownload);
-        fileDownload.href = source;
-        fileDownload.download = 'SiddhiPatra_Paper.doc';
-        fileDownload.click();
-        document.body.removeChild(fileDownload);
     }
 </script>
 </body>
